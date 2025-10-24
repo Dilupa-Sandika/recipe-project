@@ -4,34 +4,29 @@ import RecipeCard from '../../components/RecipeCard.astro';
 import { getCollection } from 'astro:content';
 
 export async function getStaticPaths() {
-  try {
-    const allRecipes = await getCollection('recipes');
-    
-    // Get unique categories and validate them
-    const uniqueCategories = [...new Set(
-      allRecipes.map(recipe => {
-        const category = recipe.data.category.toLowerCase().trim();
-        if (!category) throw new Error(`Invalid category in recipe: ${recipe.slug}`);
-        return category;
-      })
-    )];
+  const allRecipes = await getCollection('recipes');
 
-    // Generate pages for each valid category
-    return uniqueCategories.map(category => {
-      const filteredRecipes = allRecipes.filter(
-        recipe => recipe.data.category.toLowerCase().trim() === category
-      ).sort((a, b) => b.data.publishDate.getTime() - a.data.publishDate.getTime());
+  // Get unique categories and validate them
+  const uniqueCategories = [...new Set(
+    allRecipes.map((recipe) => recipe.data.category.toLowerCase().trim()).filter(Boolean)
+  )];
 
-      return {
-        params: { category },
-        props: { 
-          recipes: filteredRecipes,
-          categoryName: allRecipes.find(
-            r => r.data.category.toLowerCase().trim() === category
-          )?.data.category || category,
-          totalRecipes: filteredRecipes.length
-        },
-      };
+  // Generate pages for each valid category
+  return uniqueCategories.map((category) => {
+    const filteredRecipes = allRecipes
+      .filter((recipe) => recipe.data.category.toLowerCase().trim() === category)
+      .sort((a, b) => b.data.publishDate.getTime() - a.data.publishDate.getTime());
+
+    return {
+      params: { category },
+      props: {
+        recipes: filteredRecipes,
+        categoryName:
+          allRecipes.find((r) => r.data.category.toLowerCase().trim() === category)?.data.category ||
+          category,
+        totalRecipes: filteredRecipes.length,
+      },
+    };
   });
 }
 

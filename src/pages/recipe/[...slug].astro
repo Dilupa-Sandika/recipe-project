@@ -22,8 +22,12 @@ interface Props {
 
 const { recipe } = Astro.props;
 
+let Content;
+let seoProps;
+
 try {
-  const { Content } = await recipe.render();
+  const renderResult = await recipe.render();
+  Content = renderResult.Content;
   
   // Generate Schema.org JSON-LD
   const recipeSchema = {
@@ -42,21 +46,30 @@ try {
     }
   };
 
-// --- SCHEMA EXTRACTION CODE එක සම්පූර්ණයෙන්ම අයින් කලා ---
+  // --- SCHEMA EXTRACTION CODE එක සම්පූර්ණයෙන්ම අයින් කලා ---
 
-// 4. SEO details (jsonLD එක සම්පූර්ණයෙන්ම අයින් කලා)
-const seoProps = {
-  title: recipe.data.title,
-  description: recipe.data.description,
-  openGraph: {
-    basic: {
-      title: recipe.data.title,
-      type: 'article',
-      image: new URL(recipe.data.image, Astro.site).href,
-    }
-  },
-  // jsonLD එක මෙතන නෑ
-};
+  // 4. SEO details (jsonLD එක සම්පූර්ණයෙන්ම අයින් කලා)
+  seoProps = {
+    title: recipe.data.title,
+    description: recipe.data.description,
+    openGraph: {
+      basic: {
+        title: recipe.data.title,
+        type: 'article',
+        image: new URL(recipe.data.image, Astro.site).href,
+      }
+    },
+    // jsonLD එක මෙතන නෑ
+  };
+} catch (error) {
+  console.error('Error rendering recipe page:', error);
+  // fallback minimal seoProps to avoid build-time crashes
+  seoProps = {
+    title: recipe?.data?.title || 'Recipe',
+    description: recipe?.data?.description || '',
+    openGraph: { basic: { title: recipe?.data?.title || 'Recipe', type: 'article' } }
+  };
+}
 ---
 <style>
   .video-container {
