@@ -26,36 +26,32 @@ body {
   padding: 0;
 }
 
-/* --- FIX: Heading Styles Adjusted for Consistency --- */
 h1 { /* Main page titles */
-  font-size: 2.2rem; /* Consistent large size */
+  font-size: 2.2rem;
   font-weight: 700;
   color: var(--color-text-darker);
   margin-top: 1.5em;
-  margin-bottom: 1em; /* Increased bottom margin */
-  text-align: center; /* Center align H1 */
-  border-bottom: 2px solid var(--color-border); /* Add subtle border */
-  padding-bottom: 0.5rem; /* Add padding below border */
+  margin-bottom: 1em;
+  text-align: center;
+  border-bottom: 2px solid var(--color-border);
+  padding-bottom: 0.5rem;
 }
 
 h2 { /* Section titles / Subheadings */
   font-size: 1.8rem;
   font-weight: 700;
-  color: var(--color-primary); /* Use primary color for H2 */
+  color: var(--color-primary);
   margin-top: 2.5rem;
   margin-bottom: 1rem;
 }
 
 h3 { /* Sub-subheadings */
   font-size: 1.3rem;
-  font-weight: 600; /* Slightly less bold */
+  font-weight: 600;
   color: var(--color-text-darker);
   margin-top: 1.5rem;
   margin-bottom: 0.5rem;
 }
-/* h4, h5, h6 inherit base styles or can be added */
-/* --- END FIX --- */
-
 
 a {
   color: var(--color-primary);
@@ -74,7 +70,7 @@ img {
   border-radius: 8px;
 }
 
-p, ul, ol { /* Add base styling for paragraphs and lists */
+p, ul, ol {
     line-height: 1.7;
     margin-bottom: 1rem;
     color: var(--color-text-light);
@@ -98,7 +94,7 @@ strong {
 }
 
 .page-content {
-  padding-top: 1rem; /* Reduced top padding slightly */
+  padding-top: 1rem;
   padding-bottom: 2rem;
 }
 
@@ -122,9 +118,9 @@ header nav {
 }
 
 .logo {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--color-text);
+  font-size: 1.5rem; /* Adjusted size */
+  font-weight: 700; /* Adjusted weight */
+  color: var(--color-text); /* Adjusted color */
   text-decoration: none;
 }
 .logo:hover {
@@ -151,12 +147,12 @@ header nav {
 
 /* Section Title (Used on Homepage/Category) */
 .section-title {
-  font-size: 1.8rem; /* Match H2 size */
-  font-weight: 700;
-  color: var(--color-text-darker); /* Darker text */
+  font-size: 1.5rem; /* Adjusted size */
+  font-weight: 600; /* Adjusted weight */
+  color: var(--color-text); /* Adjusted color */
   margin-top: 3rem;
   margin-bottom: 1.5rem;
-  border-bottom: 2px solid var(--color-primary); /* Use primary color border */
+  border-bottom: 2px solid var(--color-border); /* Adjusted border color */
   padding-bottom: 0.5rem;
   display: inline-block;
 }
@@ -174,7 +170,7 @@ footer {
   max-width: 1024px;
   margin: 0 auto;
   padding: 0 1.5rem;
-  text-align: center;
+  text-align: center; /* Center align the content */
   color: var(--color-text-light);
   font-size: 0.875rem;
 }
@@ -194,7 +190,7 @@ footer {
    text-decoration: underline;
 }
 
-/* Basic Form Styles (from contact.astro) - Moved here for potential reuse */
+/* Basic Form Styles (from contact.astro) */
 .contact-form {
     background-color: var(--color-white);
     padding: 2rem;
@@ -240,9 +236,30 @@ footer {
 .submit-button:hover {
     background-color: var(--color-primary-dark);
 }
-.text-center { /* Re-add text-center utility if needed elsewhere */
+.text-center {
     text-align: center;
 }
-.hidden { /* For Netlify honeypot */
+.hidden {
     display: none;
+}
+
+/* --- Responsive Styles for Mobile --- */
+@media (max-width: 768px) {
+  header { padding: 0.75rem 0; }
+  .logo { font-size: 1.3rem; }
+  .nav-links { gap: 0.75rem; }
+  .nav-links a { font-size: 0.85rem; }
+  .page-content { padding-top: 1rem; padding-bottom: 1.5rem; }
+  h1 { font-size: 1.8rem; }
+  h2, .section-title { font-size: 1.5rem; }
+  .hero-title { font-size: 2.5rem; } /* Adjust hero title on mobile */
+  .hero-subtitle { font-size: 1rem; } /* Adjust hero subtitle */
+  .hero-section { padding: 3rem 1rem; } /* Adjust hero padding */
+}
+
+@media (max-width: 480px) {
+    .logo { font-size: 1.2rem; }
+    .nav-links { gap: 0.5rem; }
+    .nav-links a { font-size: 0.8rem; }
+    .hero-title { font-size: 2rem; }
 }

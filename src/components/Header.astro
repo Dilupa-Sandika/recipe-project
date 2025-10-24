@@ -1,17 +1,16 @@
 ---
 // src/components/Header.astro
 ---
-<header> {/* Removed extra classes, handled in global.css */}
-  <nav> {/* Removed extra classes, handled in global.css */}
-    {/* --- FIX: Added class="logo" --- */}
+<header>
+  <nav class="container"> {/* Use container class directly */}
     <a href="/" class="logo">
       Vegas Recipes
     </a>
-    {/* --- END FIX --- */}
-
-    <div class="nav-links"> {/* Changed class name */}
+    <div class="nav-links">
       <a href="/">Home</a>
-      <a href="/#all-recipes">All Recipes</a>
+      {/* --- CHANGE: "All Recipes" to "Recipes" --- */}
+      <a href="/#all-recipes">Recipes</a>
+      {/* --- END CHANGE --- */}
       <a href="/about">About</a>
       <a href="/contact">Contact</a>
     </div>
