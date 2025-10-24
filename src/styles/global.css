@@ -103,7 +103,7 @@ header {
   background-color: var(--color-white);
   border-bottom: 1px solid var(--color-border);
   padding: 1rem 0;
-  position: sticky;
+  position: sticky; /* Sticky on desktop */
   top: 0;
   z-index: 50;
 }
@@ -118,9 +118,9 @@ header nav {
 }
 
 .logo {
-  font-size: 1.5rem; /* Adjusted size */
-  font-weight: 700; /* Adjusted weight */
-  color: var(--color-text); /* Adjusted color */
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text);
   text-decoration: none;
 }
 .logo:hover {
@@ -147,12 +147,12 @@ header nav {
 
 /* Section Title (Used on Homepage/Category) */
 .section-title {
-  font-size: 1.5rem; /* Adjusted size */
-  font-weight: 600; /* Adjusted weight */
-  color: var(--color-text); /* Adjusted color */
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-text);
   margin-top: 3rem;
   margin-bottom: 1.5rem;
-  border-bottom: 2px solid var(--color-border); /* Adjusted border color */
+  border-bottom: 2px solid var(--color-border);
   padding-bottom: 0.5rem;
   display: inline-block;
 }
@@ -170,7 +170,7 @@ footer {
   max-width: 1024px;
   margin: 0 auto;
   padding: 0 1.5rem;
-  text-align: center; /* Center align the content */
+  text-align: center;
   color: var(--color-text-light);
   font-size: 0.875rem;
 }
@@ -245,16 +245,22 @@ footer {
 
 /* --- Responsive Styles for Mobile --- */
 @media (max-width: 768px) {
-  header { padding: 0.75rem 0; }
+  /* --- FIX: Make header scroll normally on mobile --- */
+  header {
+    padding: 0.75rem 0;
+    position: static; /* Remove sticky position */
+  }
+  /* --- END FIX --- */
+
   .logo { font-size: 1.3rem; }
   .nav-links { gap: 0.75rem; }
   .nav-links a { font-size: 0.85rem; }
   .page-content { padding-top: 1rem; padding-bottom: 1.5rem; }
   h1 { font-size: 1.8rem; }
   h2, .section-title { font-size: 1.5rem; }
-  .hero-title { font-size: 2.5rem; } /* Adjust hero title on mobile */
-  .hero-subtitle { font-size: 1rem; } /* Adjust hero subtitle */
-  .hero-section { padding: 3rem 1rem; } /* Adjust hero padding */
+  .hero-title { font-size: 2.5rem; }
+  .hero-subtitle { font-size: 1rem; }
+  .hero-section { padding: 3rem 1rem; }
 }
 
 @media (max-width: 480px) {
