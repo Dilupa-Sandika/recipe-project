@@ -12,7 +12,9 @@
   "dependencies": {
     "astro-seo": "^0.8.4",
     "@astrojs/sitemap": "^3.1.6",
+    "@astrojs/image": "^0.18.0",
     "astro": "^4.11.3",
+    "sharp": "^0.33.2",
     "zod": "^3.23.8"
   }
 }
