@@ -1,12 +1,22 @@
 ---
+// src/pages/about.astro (Removed inline styles)
 import BaseLayout from '../layouts/BaseLayout.astro';
+
 const seoProps = {
-  title: 'About Us',
-  description: 'Learn more about Vegas Recipes and our mission.'
-}
+  title: 'About Us | Vegas Recipes',
+  description: 'Learn more about Vegas Recipes and our passion for simple, delicious food from around the world.'
+};
 ---
+{/* --- Style block removed, styles now come from global.css --- */}
+
 <BaseLayout seo={seoProps}>
-  <h1>About Us</h1>
-  <p>Welcome to Vegas Recipes! We are dedicated to providing the best and easiest recipes for home cooks in the USA.</p>
-  <p>Our mission is to make cooking simple, fun, and delicious.</p>
+  {/* Added container class */}
+  <div class="container about-content">
+    <h1>About Vegas Recipes</h1>
+
+    <p>Welcome to Vegas Recipes, your go-to source for delicious, easy-to-follow recipes perfect for home cooks everywhere!</p>
+    <p>Our mission is simple: to make cooking enjoyable and accessible for everyone...</p>
+    <p>Here at Vegas Recipes, we love exploring food from all cultures...</p>
+    <p>Thank you for visiting! We're excited to share our culinary journey with you...</p>
+  </div>
 </BaseLayout>

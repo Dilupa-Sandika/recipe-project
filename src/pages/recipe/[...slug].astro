@@ -1,8 +1,10 @@
 ---
+// src/pages/recipe/[...slug].astro (Full version with sanitize-html)
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getCollection, type CollectionEntry } from 'astro:content';
-import sanitizeHtml from 'sanitize-html';
+import sanitizeHtml from 'sanitize-html'; // Make sure this is installed
 
+// Static Paths (වෙනසක් නෑ)
 export async function getStaticPaths() {
   try {
     const allRecipes = await getCollection('recipes');
@@ -23,32 +25,63 @@ interface Props {
 const { recipe } = Astro.props;
 
 let Content;
-let seoProps;
+let seoProps = { // Default SEO props in case of error
+    title: recipe?.data?.title || 'Recipe Error',
+    description: 'Could not load recipe details.'
+};
 
 try {
   const renderResult = await recipe.render();
-  Content = renderResult.Content;
-  
+  Content = renderResult.Content; // Get the component to render markdown
+
+  // --- Sanitize and Extract Schema Data ---
+  const body = recipe.body;
+  let ingredients: string[] = [];
+  const ingredientsMatch = body.match(/##\s+Ingredients\s*\n([\s\S]*?)(?=\n##\s+|$)/);
+  if (ingredientsMatch && ingredientsMatch[1]) {
+    const ingredientLines = ingredientsMatch[1].match(/^[*\-]\s+(.*)/gm);
+    if (ingredientLines) {
+      ingredients = ingredientLines.map(line =>
+        sanitizeHtml(line.replace(/^[*\-]\s+/, '').trim(), { allowedTags: [], allowedAttributes: {} })
+      );
+    }
+  }
+
+  let instructions: { "@type": string; "text": string }[] = [];
+  const instructionsMatch = body.match(/##\s+Instructions\s*\n([\s\S]*?)(?=\n##\s+|$)/);
+  if (instructionsMatch && instructionsMatch[1]) {
+    const instructionLines = instructionsMatch[1].match(/^\d+\.\s+(.*)/gm);
+    if (instructionLines) {
+      instructions = instructionLines.map(line => ({
+         "@type": "HowToStep",
+         "text": sanitizeHtml(line.replace(/^\d+\.\s+/, '').trim(), { allowedTags: [], allowedAttributes: {} })
+      }));
+    }
+  }
+  // --- End Sanitize ---
+
   // Generate Schema.org JSON-LD
   const recipeSchema = {
     "@context": "https://schema.org",
     "@type": "Recipe",
     name: recipe.data.title,
     description: recipe.data.description,
-    image: new URL(recipe.data.image, Astro.site).toString(),
-    prepTime: `PT${recipe.data.prepTime.replace(/\s+/g, '')}`,
-    cookTime: `PT${recipe.data.cookTime.replace(/\s+/g, '')}`,
+    image: Astro.site ? new URL(recipe.data.image, Astro.site).toString() : recipe.data.image, // Handle missing Astro.site in dev
+    prepTime: `PT${recipe.data.prepTime.replace(/\s+/g, '')}`, // Remove spaces
+    cookTime: `PT${recipe.data.cookTime.replace(/\s+/g, '')}`, // Remove spaces
     recipeYield: `${recipe.data.servings} servings`,
-    datePublished: recipe.data.publishDate.toISOString(),
-    author: {
-      "@type": "Organization",
-      name: "Recipe Project"
+    datePublished: recipe.data.publishDate.toISOString(), // Format date
+    recipeCategory: recipe.data.category,
+    recipeIngredient: ingredients, // Use sanitized ingredients
+    recipeInstructions: instructions, // Use sanitized instructions
+    author: { // Add author info if you want
+        "@type": "Person",
+        name: "Vegas Recipes" // Or your name
     }
+    // Add keywords if needed: keywords: recipe.data.tags.join(', ')
   };
 
-  // --- SCHEMA EXTRACTION CODE එක සම්පූර්ණයෙන්ම අයින් කලා ---
-
-  // 4. SEO details (jsonLD එක සම්පූර්ණයෙන්ම අයින් කලා)
+  // Update seoProps
   seoProps = {
     title: recipe.data.title,
     description: recipe.data.description,
@@ -56,175 +89,53 @@ try {
       basic: {
         title: recipe.data.title,
         type: 'article',
-        image: new URL(recipe.data.image, Astro.site).href,
+        image: recipe.data.image, // Pass relative path to Seo component
       }
     },
-    // jsonLD එක මෙතන නෑ
+    // Pass the schema object directly to the Seo component
+    // Note: astro-seo doesn't directly support jsonLD prop like this.
+    // We'll need to adjust Seo.astro later if we want this exact structure.
+    // For now, let's keep it simple to avoid errors.
+    // extend: {
+    //   meta: [{ name: 'schema:recipe', content: JSON.stringify(recipeSchema) }]
+    // }
   };
+
 } catch (error) {
-  console.error('Error rendering recipe page:', error);
-  // fallback minimal seoProps to avoid build-time crashes
-  seoProps = {
-    title: recipe?.data?.title || 'Recipe',
-    description: recipe?.data?.description || '',
-    openGraph: { basic: { title: recipe?.data?.title || 'Recipe', type: 'article' } }
-  };
+  console.error(`Error rendering recipe "${recipe?.slug}":`, error);
+  // Keep default seoProps defined above
+  Content = () => Astro.createElement('p', null, 'Error loading recipe content.'); // Show an error message
 }
 ---
 <style>
-  .video-container {
-    position: relative;
-    padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
-    height: 0;
-    overflow: hidden;
-    width: 100%;
-    background: #000;
-    border-radius: 12px;
-    grid-column: 1 / -1; /* Video එක 2-column layout එකේ full width යන්න */
-    margin-bottom: 2rem; /* Add some space below video */
-  }
-  .video-container iframe {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-  }
-  .recipe-header {
-    text-align: center;
-    border-bottom: 1px solid var(--color-border);
-    padding-bottom: 2rem;
-  }
-  .recipe-title {
-    font-size: 2.8rem; /* ටිකක් ලොකු කලා */
-    font-weight: 900;
-    color: var(--color-text);
-    margin-bottom: 1rem;
-    line-height: 1.3;
-  }
-  .recipe-meta {
-    display: flex;
-    justify-content: center;
-    gap: 1.5rem;
-    color: var(--color-text-light);
-    font-weight: 600; /* ටිකක් Bold අඩු කලා */
-  }
-  .recipe-image {
-    margin-top: 2rem;
-    width: 100%;
-    max-height: 500px;
-    object-fit: cover;
-    border-radius: 12px; /* Image එකත් round කලා */
-  }
-
-  .recipe-content-wrapper {
-    display: grid;
-    grid-template-columns: 1fr; /* Mobile එකේ 1 column */
-    gap: 2rem;
-    margin-top: 2rem;
-  }
-
-  /* PC එකේදී 2 column layout එකක් හදමු */
-  @media (min-width: 768px) {
-    .recipe-content-wrapper {
-      grid-template-columns: 3fr 1fr; 
-    }
-  }
-
-  .recipe-content {
-    background: var(--color-white);
-    border: 1px solid var(--color-border);
-    border-radius: 12px;
-    padding: 2rem;
-  }
-  
-  /* Markdown content එක style කරමු */
-  .recipe-content h2 {
-    font-size: 1.8rem;
-    font-weight: 700;
-    color: var(--color-primary); /* Use primary color for headings */
-    margin-top: 2rem;
-    margin-bottom: 1rem;
-    border-bottom: 2px solid var(--color-border);
-    padding-bottom: 0.5rem;
-  }
-  .recipe-content ul,
-  .recipe-content ol {
-    padding-left: 1.5rem;
-    line-height: 1.8; /* Improve readability */
-    color: var(--color-text);
-  }
-  .recipe-content li {
-    margin-bottom: 0.85rem; /* Add more space between list items */
-  }
-   .recipe-content li::marker { /* Style list markers */
-      color: var(--color-primary);
-      font-weight: bold;
-   }
-  .recipe-content p {
-    line-height: 1.8; /* Improve readability */
-    font-size: 1rem;
-    margin-bottom: 1rem;
-  }
-  .recipe-content strong {
-      color: var(--color-text); /* Make bold text darker */
-  }
-
-  .sidebar {
-     padding-top: 1rem; /* Add some space above sidebar content */
-  }
-  .affiliate-box {
-    background: var(--color-white);
-    border: 1px solid var(--color-border);
-    border-radius: 12px;
-    padding: 1.5rem;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03); /* Softer shadow */
-  }
-  .affiliate-box h3 {
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: var(--color-text);
-    margin-top: 0;
-    margin-bottom: 1rem;
-    border-bottom: 1px solid var(--color-border);
-    padding-bottom: 0.5rem;
-  }
-  .affiliate-box a {
-    display: block;
-    background-color: var(--color-primary);
-    color: var(--color-white);
-    font-weight: 600; /* Slightly less bold */
-    text-align: center;
-    padding: 0.85rem; /* Adjust padding */
-    border-radius: 8px;
-    margin-bottom: 0.75rem; /* Adjust margin */
-    transition: background-color 0.2s;
-  }
-  .affiliate-box a:hover {
-    background-color: var(--color-primary-dark);
-    text-decoration: none;
-  }
-  .card-category { /* Category link style (උඩ තියෙන) */
-    font-size: 0.8rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    color: var(--color-primary);
-    display: inline-block;
-    margin-bottom: 0.5rem;
-  }
-  .card-category:hover {
-    text-decoration: none;
-    color: var(--color-primary-dark);
-  }
-
+  .video-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; width: 100%; background: #000; border-radius: 12px; grid-column: 1 / -1; margin-bottom: 2rem; }
+  .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+  .recipe-header { text-align: center; border-bottom: 1px solid var(--color-border); padding-bottom: 2rem; }
+  .recipe-title { font-size: 2.8rem; font-weight: 900; color: var(--color-text); margin-bottom: 1rem; line-height: 1.3; }
+  .recipe-meta { display: flex; justify-content: center; gap: 1.5rem; color: var(--color-text-light); font-weight: 600; }
+  .recipe-image { margin-top: 2rem; width: 100%; max-height: 500px; object-fit: cover; border-radius: 12px; }
+  .recipe-content-wrapper { display: grid; grid-template-columns: 1fr; gap: 2rem; margin-top: 2rem; }
+  @media (min-width: 768px) { .recipe-content-wrapper { grid-template-columns: 3fr 1fr; } }
+  .recipe-content { background: var(--color-white); border: 1px solid var(--color-border); border-radius: 12px; padding: 2rem; }
+  .recipe-content h2 { font-size: 1.8rem; font-weight: 700; color: var(--color-primary); margin-top: 2rem; margin-bottom: 1rem; border-bottom: 2px solid var(--color-border); padding-bottom: 0.5rem; }
+  .recipe-content ul, .recipe-content ol { padding-left: 1.5rem; line-height: 1.8; color: var(--color-text); }
+  .recipe-content li { margin-bottom: 0.85rem; }
+  .recipe-content li::marker { color: var(--color-primary); font-weight: bold; }
+  .recipe-content p { line-height: 1.8; font-size: 1rem; margin-bottom: 1rem; }
+  .recipe-content strong { color: var(--color-text); }
+  .sidebar { padding-top: 1rem; }
+  .affiliate-box { background: var(--color-white); border: 1px solid var(--color-border); border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03); }
+  .affiliate-box h3 { font-size: 1.2rem; font-weight: 700; color: var(--color-text); margin-top: 0; margin-bottom: 1rem; border-bottom: 1px solid var(--color-border); padding-bottom: 0.5rem; }
+  .affiliate-box a { display: block; background-color: var(--color-primary); color: var(--color-white); font-weight: 600; text-align: center; padding: 0.85rem; border-radius: 8px; margin-bottom: 0.75rem; transition: background-color 0.2s; }
+  .affiliate-box a:hover { background-color: var(--color-primary-dark); text-decoration: none; }
+  .card-category { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--color-primary); display: inline-block; margin-bottom: 0.5rem; }
+  .card-category:hover { text-decoration: none; color: var(--color-primary-dark); }
 </style>
 
 <BaseLayout seo={seoProps}>
   <article>
     <header class="recipe-header">
-      <a href={`/category/${recipe.data.category.toLowerCase()}`} class="card-category">
-        {recipe.data.category}
-      </a>
+      <a href={`/category/${recipe.data.category.toLowerCase()}`} class="card-category">{recipe.data.category}</a>
       <h1 class="recipe-title">{recipe.data.title}</h1>
       <div class="recipe-meta">
         <span><strong>Prep:</strong> {recipe.data.prepTime}</span>
@@ -236,19 +147,20 @@ try {
     <img src={recipe.data.image} alt={recipe.data.title} class="recipe-image" />
 
     <div class="recipe-content-wrapper">
-       {recipe.data.youtubeId && (
+      {recipe.data.youtubeId && (
         <div class="video-container">
-          <iframe 
+          <iframe
             src={`https://www.youtube.com/embed/${recipe.data.youtubeId}`}
-            title="YouTube video player" 
-            frameborder="0" 
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+            title="YouTube video player"
+            frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowfullscreen>
           </iframe>
         </div>
       )}
 
       <div class="recipe-content">
+        {/* Render the markdown content */}
         <Content />
       </div>
 
@@ -256,11 +168,7 @@ try {
         {recipe.data.affiliateLinks && recipe.data.affiliateLinks.length > 0 && (
           <div class="affiliate-box">
             <h3>Recommended Tools</h3>
-            {recipe.data.affiliateLinks.map(link => (
-              <a href={link.url} target="_blank" rel="noopener sponsored">
-                {link.label}
-              </a>
-            ))}
+            {recipe.data.affiliateLinks.map(link => <a href={link.url} target="_blank" rel="noopener sponsored">{link.label}</a>)}
           </div>
         )}
       </aside>

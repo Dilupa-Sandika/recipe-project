@@ -2,11 +2,13 @@
 // src/components/Footer.astro
 const currentYear = new Date().getFullYear();
 ---
-<footer class="mt-16 py-8 border-t border-gray-200">
-  <div class="max-w-5xl mx-auto px-6 text-center text-gray-500">
-  <p>&copy; {currentYear} Vegas Recipes. All rights reserved.</p>
-    <p class="mt-2 text-sm">
-      <a href="/privacy" class="hover:text-orange-600">Privacy Policy & Affiliate Disclosure</a>
+<footer> {/* Removed extra classes, handled in global.css */}
+  {/* --- FIX: Added class="footer-content" --- */}
+  <div class="footer-content container"> {/* Added container for consistent width */}
+  {/* --- END FIX --- */}
+    <p>&copy; {currentYear} Vegas Recipes. All rights reserved.</p>
+    <p> {/* Removed mt-2 and text-sm, handled in global.css */}
+      <a href="/privacy">Privacy Policy & Affiliate Disclosure</a> {/* Removed hover class */}
     </p>
   </div>
 </footer>

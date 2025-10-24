@@ -1,111 +1,42 @@
 ---
-// src/layouts/BaseLayout.astro (Restored with Seo component)
-import Seo from '../components/Seo.astro'; // <-- UNCOMMENTED
+// src/layouts/BaseLayout.astro (Corrected Title Handling)
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import Seo from '../components/Seo.astro';
+import type { Props as SEOProps } from 'astro-seo';
+import '../styles/global.css'; // Import global.css file
 
-// SEO props ගන්න
-import type { Props as SEOProps } from 'astro-seo'; // <-- UNCOMMENTED
 export interface Props {
-  seo?: SEOProps; // <-- UNCOMMENTED
+  seo?: SEOProps;
 }
-const { seo } = Astro.props; // <-- UNCOMMENTED
+const { seo } = Astro.props;
 
+// Use title from seo prop if available, otherwise fallback from Seo component's default
+// We don't need a separate defaultTitle here if Seo component handles it.
 ---
-{/* Global Styles (වෙනසක් නෑ) */}
-<style is:global>
-  /* Google Font Import */
-  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;900&display=swap');
-
-  :root {
-    --color-primary: #FF6B6B; /* අපේ Main Red/Orange */
-    --color-primary-dark: #EA580C;
-    --color-text: #374151;     /* Dark Gray */
-    --color-text-light: #6B7280; /* Medium Gray */
-    --color-bg: #F9FAFB;       /* Lightest Gray Background */
-    --color-white: #FFFFFF;
-    --color-border: #E5E7EB;   /* Light Gray Border */
-    --font-main: 'Poppins', sans-serif;
-  }
-  
-  body {
-    font-family: var(--font-main);
-    color: var(--color-text);
-    background-color: var(--color-bg);
-    margin: 0;
-    padding: 0;
-  }
-  h1, h2, h3, h4, h5, h6 {
-    font-weight: 700;
-    color: var(--color-text);
-  }
-  a {
-    color: var(--color-primary);
-    text-decoration: none;
-    transition: color 0.2s ease-in-out;
-  }
-  a:hover {
-    color: var(--color-primary-dark);
-    text-decoration: underline;
-  }
-  img {
-    max-width: 100%;
-    height: auto;
-    border-radius: 8px; /* Rounded corners for images */
-  }
-
-  /* Utility Classes (වෙනසක් නෑ) */
-  .max-w-5xl { max-width: 1024px; }
-  .mx-auto { margin-left: auto; margin-right: auto; }
-  .px-6 { padding-left: 1.5rem; padding-right: 1.5rem; }
-  .py-4 { padding-top: 1rem; padding-bottom: 1rem; }
-  .py-8 { padding-top: 2rem; padding-bottom: 2rem; }
-  .mt-16 { margin-top: 4rem; }
-  .mt-2 { margin-top: 0.5rem; }
-  .mt-8 { margin-top: 2rem; }
-  .border-b { border-bottom-width: 1px; }
-  .border-t { border-top-width: 1px; }
-  .border-gray-200 { border-color: var(--color-border); }
-  .bg-white { background-color: var(--color-white); }
-  .sticky { position: sticky; }
-  .top-0 { top: 0; }
-  .z-50 { z-index: 50; }
-  .flex { display: flex; }
-  .justify-between { justify-content: space-between; }
-  .items-center { align-items: center; }
-  .space-x-6 > :not([hidden]) ~ :not([hidden]) { margin-left: 1.5rem; }
-  .text-2xl { font-size: 1.5rem; }
-  .text-sm { font-size: 0.875rem; }
-  .font-bold { font-weight: 700; }
-  .font-medium { font-weight: 500; }
-  .text-gray-900 { color: #111827; }
-  .text-gray-600 { color: var(--color-text-light); }
-  .text-gray-500 { color: #6B7280; }
-  .hover\:text-orange-600:hover { color: var(--color-primary-dark); }
-  .text-center { text-align: center; }
-</style>
-
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-    
-    {/* --- SEO Component එක ආයෙත් දැම්මා --- */}
-    <Seo {...seo} /> 
-    {/* ------------------------------------ */}
-    
-  <title>{seo?.title || 'Vegas Recipes'}</title> {/* Use seo prop */}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;900&display=swap" rel="stylesheet">
+
+    {/* Seo component handles the title tag itself */}
+    <Seo {...seo} />
+
+    {/* Remove the explicit <title> tag here, Seo component adds it */}
+    {/* <title>{ seo?.title || 'Vegas Recipes' }</title> */}
+
   </head>
   <body>
     <Header />
-    
-    <main class="max-w-5xl mx-auto px-6 py-8"> {/* Line 54 */}
+    <main class="container page-content">
       <slot />
     </main>
-    
     <Footer />
-    
+    <script is:inline src="/scripts/search.js"></script>
   </body>
 </html>

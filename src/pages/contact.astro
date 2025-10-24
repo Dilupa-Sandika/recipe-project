@@ -1,12 +1,37 @@
 ---
+// src/pages/contact.astro (Removed inline styles)
 import BaseLayout from '../layouts/BaseLayout.astro';
+
 const seoProps = {
-  title: 'Contact Us',
-  description: 'Get in touch with Vegas Recipes.'
-}
+  title: 'Contact Us | Vegas Recipes',
+  description: 'Get in touch with Vegas Recipes. Send us your questions or suggestions!'
+};
 ---
+{/* --- Style block removed, styles now come from global.css --- */}
+
 <BaseLayout seo={seoProps}>
-  <h1>Contact Us</h1>
-  <p>Have a question or a recipe suggestion? We'd love to hear from you!</p>
-  <p>You can reach us at: <a href="mailto:hello@recipes.702o2.com">hello@recipes.702o2.com</a></p>
+  <div class="container text-center">
+      <h1>Contact Us</h1>
+      <p style="color: var(--color-text-light); margin-bottom: 1rem;">Have a question, suggestion, or just want to say hello? Fill out the form below!</p>
+  </div>
+
+  <form name="contact" method="POST" data-netlify="true" netlify-honeypot="bot-field" class="contact-form">
+    <p class="hidden"><label> Don’t fill this out if you’re human: <input name="bot-field" /> </label></p>
+    <input type="hidden" name="form-name" value="contact" />
+    <div class="form-group">
+      <label for="name">Name:</label>
+      <input type="text" id="name" name="name" required />
+    </div>
+    <div class="form-group">
+      <label for="email">Email:</label>
+      <input type="email" id="email" name="email" required />
+    </div>
+    <div class="form-group">
+      <label for="message">Message:</label>
+      <textarea id="message" name="message" required></textarea>
+    </div>
+    <div class="text-center">
+        <button type="submit" class="submit-button">Send Message</button>
+    </div>
+  </form>
 </BaseLayout>

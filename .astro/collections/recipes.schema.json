@@ -1,0 +1,119 @@
+{
+  "$ref": "#/definitions/recipes",
+  "definitions": {
+    "recipes": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 100
+        },
+        "description": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 160,
+          "errorMessage": {
+            "maxLength": "SEO description must be under 160 characters"
+          }
+        },
+        "publishDate": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "string",
+              "format": "date"
+            },
+            {
+              "type": "integer",
+              "format": "unix-time"
+            }
+          ]
+        },
+        "image": {
+          "type": "string",
+          "pattern": "^\\/images\\/[a-zA-Z0-9-_\\/]+\\.(jpg|jpeg|png|webp)$",
+          "errorMessage": {
+            "pattern": "Image path must be valid and in /images/ directory"
+          }
+        },
+        "category": {
+          "type": "string",
+          "minLength": 3
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 2
+          }
+        },
+        "prepTime": {
+          "type": "string",
+          "pattern": "^(\\d+)\\s*(min|hour|hrs?|minutes?)$",
+          "errorMessage": {
+            "pattern": "Prep time must be in format: '30 min' or '2 hours'"
+          }
+        },
+        "cookTime": {
+          "type": "string",
+          "pattern": "^(\\d+)\\s*(min|hour|hrs?|minutes?)$",
+          "errorMessage": {
+            "pattern": "Cook time must be in format: '30 min' or '2 hours'"
+          }
+        },
+        "servings": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 50
+        },
+        "isFeatured": {
+          "type": "boolean",
+          "default": false
+        },
+        "affiliateLinks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string"
+              },
+              "url": {
+                "type": "string",
+                "format": "uri"
+              }
+            },
+            "required": [
+              "label",
+              "url"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "youtubeId": {
+          "type": "string"
+        },
+        "$schema": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "title",
+        "description",
+        "publishDate",
+        "image",
+        "category",
+        "tags",
+        "prepTime",
+        "cookTime",
+        "servings"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

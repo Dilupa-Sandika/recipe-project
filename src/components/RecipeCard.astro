@@ -9,7 +9,7 @@ interface Props {
 const { recipe } = Astro.props;
 const recipeUrl = `/recipe/${recipe.slug}`;
 ---
-<div class="recipe-card">
+<div class="recipe-card" data-title={recipe.data.title.toLowerCase()} data-tags={(recipe.data.tags || []).join(' ').toLowerCase()}>
   <a href={recipeUrl} class="card-image-link">
     <img src={recipe.data.image} alt={recipe.data.title} />
   </a>
