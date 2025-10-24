@@ -3,8 +3,7 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getCollection, type CollectionEntry } from 'astro:content';
 
-// 1. මේ function එකෙන් Astro වලට කියනවා build time එකේදී
-//    හැම recipe එකකටම වෙන වෙනම HTML පිටුවක් හදන්න කියලා.
+// 1. Static Paths හදන function එක (වෙනසක් නෑ)
 export async function getStaticPaths() {
   const allRecipes = await getCollection('recipes');
   return allRecipes.map(recipe => ({
@@ -13,68 +12,117 @@ export async function getStaticPaths() {
   }));
 }
 
-// 2. අදාල recipe එකේ data ටික props වලින් ගන්නවා
+// 2. Props ගැනීම (වෙනසක් නෑ)
 type Props = {
   recipe: CollectionEntry<'recipes'>;
 };
 const { recipe } = Astro.props;
 
-// 3. Markdown content එක render කරනවා
+// 3. Markdown content render කිරීම (වෙනසක් නෑ)
 const { Content } = await recipe.render();
 
-// 4. මේ පිටුවට අදාළ SEO details
+// --- SCHEMA IMPROVEMENT START ---
+// 4. අමු Markdown content එකෙන් Ingredients සහ Instructions ගන්න code එක
+const body = recipe.body; // Raw markdown content
+
+// Ingredients ටික array එකකට ගන්නවා
+let ingredients: string[] = [];
+const ingredientsMatch = body.match(/##\s+Ingredients\s*\n([\s\S]*?)(?=\n##\s+|$)/);
+if (ingredientsMatch && ingredientsMatch[1]) {
+  const ingredientLines = ingredientsMatch[1].match(/^[*\-]\s+(.*)/gm);
+  if (ingredientLines) {
+    ingredients = ingredientLines.map(line => line.replace(/^[*\-]\s+/, '').trim());
+  }
+}
+
+// Instructions ටික HowToStep objects array එකකට ගන්නවා
+let instructions: { "@type": string; "text": string }[] = [];
+const instructionsMatch = body.match(/##\s+Instructions\s*\n([\s\S]*?)(?=\n##\s+|$)/);
+if (instructionsMatch && instructionsMatch[1]) {
+  const instructionLines = instructionsMatch[1].match(/^\d+\.\s+(.*)/gm);
+  if (instructionLines) {
+    instructions = instructionLines.map(line => ({
+       "@type": "HowToStep",
+       "text": line.replace(/^\d+\.\s+/, '').trim()
+    }));
+  }
+}
+// --- SCHEMA IMPROVEMENT END ---
+
+
+// 5. SEO details (jsonLD එක update කලා)
 const seoProps = {
   title: recipe.data.title,
   description: recipe.data.description,
   openGraph: {
     basic: {
       title: recipe.data.title,
-      type: 'article', // Homepage එක 'website' වුනාට, මේක 'article'
+      type: 'article',
       image: new URL(recipe.data.image, Astro.site).href,
     }
   },
-  // අර SEO Schema එක මතකද? ඒක මෙතන දාමු.
-  // Google එකේ star ratings එක්ක පෙන්නන්න.
   jsonLD: {
     '@context': 'https://schema.org',
     '@type': 'Recipe',
     name: recipe.data.title,
     description: recipe.data.description,
     image: new URL(recipe.data.image, Astro.site).href,
-    prepTime: `PT${recipe.data.prepTime.replace(' min', 'M')}`, // "10 min" -> "PT10M"
-    cookTime: `PT${recipe.data.cookTime.replace(' min', 'M')}`, // "25 min" -> "PT25M"
+    prepTime: `PT${recipe.data.prepTime.replace(' min', 'M')}`,
+    cookTime: `PT${recipe.data.cookTime.replace(' min', 'M')}`,
     totalTime: `PT${parseInt(recipe.data.prepTime) + parseInt(recipe.data.cookTime)}M`,
     recipeYield: `${recipe.data.servings} servings`,
     recipeCategory: recipe.data.category,
-    recipeIngredient: [], // අපි මේක Markdown content එකෙන් auto ගන්නවා
-    recipeInstructions: [], // අපි මේක Markdown content එකෙන් auto ගන්නවා
+    // --- මෙන්න අලුත් data ---
+    recipeIngredient: ingredients, 
+    recipeInstructions: instructions,
+    // ----------------------
   }
 };
 ---
 <style>
+  .video-container {
+    position: relative;
+    padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+    height: 0;
+    overflow: hidden;
+    width: 100%;
+    background: #000;
+    border-radius: 12px;
+    grid-column: 1 / -1; /* Video එක 2-column layout එකේ full width යන්න */
+    margin-bottom: 2rem; /* Add some space below video */
+  }
+  .video-container iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
   .recipe-header {
     text-align: center;
-    border-bottom: 1px solid #E5E7EB;
+    border-bottom: 1px solid var(--color-border);
     padding-bottom: 2rem;
   }
   .recipe-title {
-    font-size: 2.5rem;
+    font-size: 2.8rem; /* ටිකක් ලොකු කලා */
     font-weight: 900;
-    color: #111827;
+    color: var(--color-text);
     margin-bottom: 1rem;
+    line-height: 1.3;
   }
   .recipe-meta {
     display: flex;
     justify-content: center;
     gap: 1.5rem;
-    color: #4B5563;
-    font-weight: 700;
+    color: var(--color-text-light);
+    font-weight: 600; /* ටිකක් Bold අඩු කලා */
   }
   .recipe-image {
     margin-top: 2rem;
     width: 100%;
     max-height: 500px;
     object-fit: cover;
+    border-radius: 12px; /* Image එකත් round කලා */
   }
 
   .recipe-content-wrapper {
@@ -87,14 +135,13 @@ const seoProps = {
   /* PC එකේදී 2 column layout එකක් හදමු */
   @media (min-width: 768px) {
     .recipe-content-wrapper {
-      /* 70% content, 30% affiliate links/tags */
       grid-template-columns: 3fr 1fr; 
     }
   }
 
   .recipe-content {
-    background: #FFFFFF;
-    border: 1px solid #E5E7EB;
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
     border-radius: 12px;
     padding: 2rem;
   }
@@ -103,56 +150,79 @@ const seoProps = {
   .recipe-content h2 {
     font-size: 1.8rem;
     font-weight: 700;
-    color: #FF6B6B;
+    color: var(--color-primary); /* Use primary color for headings */
     margin-top: 2rem;
     margin-bottom: 1rem;
-    border-bottom: 2px solid #E5E7EB;
+    border-bottom: 2px solid var(--color-border);
     padding-bottom: 0.5rem;
   }
   .recipe-content ul,
   .recipe-content ol {
     padding-left: 1.5rem;
-    line-height: 1.7;
-    color: #333333;
+    line-height: 1.8; /* Improve readability */
+    color: var(--color-text);
   }
   .recipe-content li {
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.85rem; /* Add more space between list items */
   }
+   .recipe-content li::marker { /* Style list markers */
+      color: var(--color-primary);
+      font-weight: bold;
+   }
   .recipe-content p {
-    line-height: 1.7;
-    font-size: 1.05rem;
+    line-height: 1.8; /* Improve readability */
+    font-size: 1rem;
+    margin-bottom: 1rem;
+  }
+  .recipe-content strong {
+      color: var(--color-text); /* Make bold text darker */
   }
 
   .sidebar {
-    /* හිස්ව තියමු, affiliate links වලට */
+     padding-top: 1rem; /* Add some space above sidebar content */
   }
   .affiliate-box {
-    background: #FFFFFF;
-    border: 1px solid #E5E7EB;
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
     border-radius: 12px;
     padding: 1.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03); /* Softer shadow */
   }
   .affiliate-box h3 {
     font-size: 1.2rem;
     font-weight: 700;
-    color: #111827;
+    color: var(--color-text);
     margin-top: 0;
     margin-bottom: 1rem;
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: 0.5rem;
   }
   .affiliate-box a {
     display: block;
-    background-color: #FF6B6B;
-    color: #FFFFFF;
-    font-weight: 700;
+    background-color: var(--color-primary);
+    color: var(--color-white);
+    font-weight: 600; /* Slightly less bold */
     text-align: center;
-    padding: 0.75rem;
+    padding: 0.85rem; /* Adjust padding */
     border-radius: 8px;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.75rem; /* Adjust margin */
     transition: background-color 0.2s;
   }
   .affiliate-box a:hover {
-    background-color: #EA580C;
+    background-color: var(--color-primary-dark);
     text-decoration: none;
+  }
+  .card-category { /* Category link style (උඩ තියෙන) */
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--color-primary);
+    display: inline-block;
+    margin-bottom: 0.5rem;
+  }
+  .card-category:hover {
+    text-decoration: none;
+    color: var(--color-primary-dark);
   }
 
 </style>
@@ -174,6 +244,17 @@ const seoProps = {
     <img src={recipe.data.image} alt={recipe.data.title} class="recipe-image" />
 
     <div class="recipe-content-wrapper">
+       {recipe.data.youtubeId && (
+        <div class="video-container">
+          <iframe 
+            src={`https://www.youtube.com/embed/${recipe.data.youtubeId}`}
+            title="YouTube video player" 
+            frameborder="0" 
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+            allowfullscreen>
+          </iframe>
+        </div>
+      )}
       <div class="recipe-content">
         <Content />
       </div>

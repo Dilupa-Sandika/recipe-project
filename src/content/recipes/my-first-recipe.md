@@ -14,6 +14,9 @@ affiliateLinks:
     url: "https://www.amazon.com/your-affiliate-link"
   - label: "Get my favorite Garam Masala"
     url: "https://www.amazon.com/your-affiliate-link-2"
+# --- මෙන්න අලුත් line එක ---
+youtubeId: "wz-G6x2nS2c" 
+# -----------------------------
 ---
 
 ## Description
