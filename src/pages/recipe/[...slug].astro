@@ -1,0 +1,196 @@
+---
+// src/pages/recipe/[...slug].astro
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection, type CollectionEntry } from 'astro:content';
+
+// 1. මේ function එකෙන් Astro වලට කියනවා build time එකේදී
+//    හැම recipe එකකටම වෙන වෙනම HTML පිටුවක් හදන්න කියලා.
+export async function getStaticPaths() {
+  const allRecipes = await getCollection('recipes');
+  return allRecipes.map(recipe => ({
+    params: { slug: recipe.slug },
+    props: { recipe },
+  }));
+}
+
+// 2. අදාල recipe එකේ data ටික props වලින් ගන්නවා
+type Props = {
+  recipe: CollectionEntry<'recipes'>;
+};
+const { recipe } = Astro.props;
+
+// 3. Markdown content එක render කරනවා
+const { Content } = await recipe.render();
+
+// 4. මේ පිටුවට අදාළ SEO details
+const seoProps = {
+  title: recipe.data.title,
+  description: recipe.data.description,
+  openGraph: {
+    basic: {
+      title: recipe.data.title,
+      type: 'article', // Homepage එක 'website' වුනාට, මේක 'article'
+      image: new URL(recipe.data.image, Astro.site).href,
+    }
+  },
+  // අර SEO Schema එක මතකද? ඒක මෙතන දාමු.
+  // Google එකේ star ratings එක්ක පෙන්නන්න.
+  jsonLD: {
+    '@context': 'https://schema.org',
+    '@type': 'Recipe',
+    name: recipe.data.title,
+    description: recipe.data.description,
+    image: new URL(recipe.data.image, Astro.site).href,
+    prepTime: `PT${recipe.data.prepTime.replace(' min', 'M')}`, // "10 min" -> "PT10M"
+    cookTime: `PT${recipe.data.cookTime.replace(' min', 'M')}`, // "25 min" -> "PT25M"
+    totalTime: `PT${parseInt(recipe.data.prepTime) + parseInt(recipe.data.cookTime)}M`,
+    recipeYield: `${recipe.data.servings} servings`,
+    recipeCategory: recipe.data.category,
+    recipeIngredient: [], // අපි මේක Markdown content එකෙන් auto ගන්නවා
+    recipeInstructions: [], // අපි මේක Markdown content එකෙන් auto ගන්නවා
+  }
+};
+---
+<style>
+  .recipe-header {
+    text-align: center;
+    border-bottom: 1px solid #E5E7EB;
+    padding-bottom: 2rem;
+  }
+  .recipe-title {
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: #111827;
+    margin-bottom: 1rem;
+  }
+  .recipe-meta {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    color: #4B5563;
+    font-weight: 700;
+  }
+  .recipe-image {
+    margin-top: 2rem;
+    width: 100%;
+    max-height: 500px;
+    object-fit: cover;
+  }
+
+  .recipe-content-wrapper {
+    display: grid;
+    grid-template-columns: 1fr; /* Mobile එකේ 1 column */
+    gap: 2rem;
+    margin-top: 2rem;
+  }
+
+  /* PC එකේදී 2 column layout එකක් හදමු */
+  @media (min-width: 768px) {
+    .recipe-content-wrapper {
+      /* 70% content, 30% affiliate links/tags */
+      grid-template-columns: 3fr 1fr; 
+    }
+  }
+
+  .recipe-content {
+    background: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 12px;
+    padding: 2rem;
+  }
+  
+  /* Markdown content එක style කරමු */
+  .recipe-content h2 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #FF6B6B;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid #E5E7EB;
+    padding-bottom: 0.5rem;
+  }
+  .recipe-content ul,
+  .recipe-content ol {
+    padding-left: 1.5rem;
+    line-height: 1.7;
+    color: #333333;
+  }
+  .recipe-content li {
+    margin-bottom: 0.75rem;
+  }
+  .recipe-content p {
+    line-height: 1.7;
+    font-size: 1.05rem;
+  }
+
+  .sidebar {
+    /* හිස්ව තියමු, affiliate links වලට */
+  }
+  .affiliate-box {
+    background: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 12px;
+    padding: 1.5rem;
+  }
+  .affiliate-box h3 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #111827;
+    margin-top: 0;
+    margin-bottom: 1rem;
+  }
+  .affiliate-box a {
+    display: block;
+    background-color: #FF6B6B;
+    color: #FFFFFF;
+    font-weight: 700;
+    text-align: center;
+    padding: 0.75rem;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    transition: background-color 0.2s;
+  }
+  .affiliate-box a:hover {
+    background-color: #EA580C;
+    text-decoration: none;
+  }
+
+</style>
+
+<BaseLayout seo={seoProps}>
+  <article>
+    <header class="recipe-header">
+      <a href={`/category/${recipe.data.category.toLowerCase()}`} class="card-category">
+        {recipe.data.category}
+      </a>
+      <h1 class="recipe-title">{recipe.data.title}</h1>
+      <div class="recipe-meta">
+        <span><strong>Prep:</strong> {recipe.data.prepTime}</span>
+        <span><strong>Cook:</strong> {recipe.data.cookTime}</span>
+        <span><strong>Serves:</strong> {recipe.data.servings}</span>
+      </div>
+    </header>
+
+    <img src={recipe.data.image} alt={recipe.data.title} class="recipe-image" />
+
+    <div class="recipe-content-wrapper">
+      <div class="recipe-content">
+        <Content />
+      </div>
+
+      <aside class="sidebar">
+        {recipe.data.affiliateLinks && recipe.data.affiliateLinks.length > 0 && (
+          <div class="affiliate-box">
+            <h3>Recommended Tools</h3>
+            {recipe.data.affiliateLinks.map(link => (
+              <a href={link.url} target="_blank" rel="noopener sponsored">
+                {link.label}
+              </a>
+            ))}
+          </div>
+        )}
+      </aside>
+    </div>
+
+  </article>
+</BaseLayout>

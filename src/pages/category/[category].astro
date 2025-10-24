@@ -1,0 +1,67 @@
+---
+// src/pages/category/[category].astro
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import RecipeCard from '../../components/RecipeCard.astro';
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  const allRecipes = await getCollection('recipes');
+
+  // හැම recipe එකකම category එක අරගෙන, unique list එකක් හදනවා
+  const uniqueCategories = [
+    ...new Set(allRecipes.map(recipe => recipe.data.category.toLowerCase()))
+  ];
+
+  // හැම category එකකටම page එකක් හදනවා
+  return uniqueCategories.map(category => {
+    // ඒ category එකට අදාළ recipes ටික filter කරනවා
+    const filteredRecipes = allRecipes.filter(
+      recipe => recipe.data.category.toLowerCase() === category
+    );
+    return {
+      params: { category: category },
+      props: { 
+        recipes: filteredRecipes,
+        categoryName: allRecipes.find(r => r.data.category.toLowerCase() === category)?.data.category 
+        // Capitalized name එක ගන්න (e.g., "Chicken")
+      },
+    };
+  });
+}
+
+type Props = {
+  recipes: any[]; // සරලව තියමු
+  categoryName: string;
+};
+const { recipes, categoryName } = Astro.props;
+
+const seoProps = {
+  title: `${categoryName} Recipes`,
+  description: `Find the best ${categoryName} recipes on our site.`,
+};
+---
+<style>
+  .section-title {
+    font-size: 2.2rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid #FF6B6B;
+    padding-bottom: 0.5rem;
+    display: inline-block;
+  }
+  .recipe-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+  }
+</style>
+
+<BaseLayout seo={seoProps}>
+  <h1 class="section-title">Category: {categoryName}</h1>
+  
+  <div class="recipe-grid">
+    {recipes.map(recipe => (
+      <RecipeCard recipe={recipe} />
+    ))}
+  </div>
+</BaseLayout>

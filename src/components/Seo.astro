@@ -1,0 +1,41 @@
+---
+// src/components/Seo.astro
+// අපි install කරපු 'astro-seo' package එක මෙතන import කරනවා
+import { SEO } from "astro-seo";
+import type { Props as SEOProps } from "astro-seo";
+
+export interface Props extends SEOProps {}
+
+const props = Astro.props;
+---
+<SEO
+  {...props}
+  charset="UTF-8"
+  titleDefault="My Awesome Recipe Site"
+  descriptionDefault="The best recipes for your USA audience."
+  openGraph={{
+    basic: {
+      title: props.title || "My Awesome Recipe Site",
+      type: "website",
+      // default social media image එකක්. 
+      // /public/images/social-hero.jpg වගේ තැනක මේ photo එක දාන්න
+      image: new URL(props.openGraph?.basic?.image || '/images/social-hero.jpg', Astro.site).href,
+      url: Astro.url,
+    },
+  }}
+  twitter={{
+    card: "summary_large_image",
+    // ඔයාගේ twitter account එකේ handle එක මෙතන දාන්න
+    site: "@YourTwitterHandle", 
+    creator: "@YourTwitterHandle",
+  }}
+  extend={{
+    meta: [
+      { name: "viewport", content: "width=device-width, initial-scale=1.0" },
+    ],
+    link: [
+      // /public/favicon.ico තැනට ඔයාගේ site icon එක දාන්න
+      { rel: "icon", href: "/favicon.ico" }
+    ]
+  }}
+/>

@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://recipes.702o2.com/sitemap-index.xml

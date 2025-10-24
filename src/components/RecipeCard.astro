@@ -1,0 +1,89 @@
+---
+// src/components/RecipeCard.astro
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  recipe: CollectionEntry<'recipes'>;
+}
+
+const { recipe } = Astro.props;
+const recipeUrl = `/recipe/${recipe.slug}`;
+---
+<div class="recipe-card">
+  <a href={recipeUrl} class="card-image-link">
+    <img src={recipe.data.image} alt={recipe.data.title} />
+  </a>
+  <div class="card-content">
+    <a href={`/category/${recipe.data.category.toLowerCase()}`} class="card-category">
+      {recipe.data.category}
+    </a>
+    <h3 class="card-title">
+      <a href={recipeUrl}>{recipe.data.title}</a>
+    </h3>
+    <p class="card-description">{recipe.data.description}</p>
+    <a href={recipeUrl} class="card-readmore">Read Recipe &rarr;</a>
+  </div>
+</div>
+
+<style>
+  .recipe-card {
+    background-color: #FFFFFF; /* සුදු background එක */
+    border: 1px solid #E5E7EB; /* ලා අළු border එක */
+    border-radius: 12px; /* Card එක round කරන්න */
+    overflow: hidden; /* Image එකේ corners ලස්සනට තියන්න */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); /* පොඩි shadow එකක් */
+    transition: box-shadow 0.3s ease;
+  }
+  .recipe-card:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  }
+  .card-image-link img {
+    width: 100%;
+    height: 200px; /* Card image එකට standard height එකක් */
+    object-fit: cover; /* Photo එක crop වෙලා ලස්සනට fill වෙන්න */
+    border-radius: 0;
+    border-bottom: 1px solid #E5E7EB;
+  }
+  .card-content {
+    padding: 1.5rem; /* අඟල් 1.5ක padding එකක් */
+  }
+  .card-category {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #FF6B6B; /* අපේ ප්‍රධාන පාට */
+  }
+  .card-category:hover {
+    text-decoration: none;
+    color: #EA580C;
+  }
+  .card-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-top: 0.5rem;
+  }
+  .card-title a {
+    color: #111827; /* කළු පාටට හුරු අළු පාට */
+  }
+  .card-title a:hover {
+    text-decoration: none;
+    color: #FF6B6B;
+  }
+  .card-description {
+    font-size: 0.9rem;
+    color: #6B7280;
+    line-height: 1.5;
+    margin-top: 0.75rem;
+    
+    /* Description එක දිග වැඩි නම් line 3කට කපන CSS trick එක */
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;  
+    overflow: hidden;
+  }
+  .card-readmore {
+    display: inline-block;
+    margin-top: 1rem;
+    font-weight: 700;
+  }
+</style>
