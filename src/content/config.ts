@@ -1,23 +1,21 @@
-// මේක Astro වලට අදාළ "Zod" කියන rule-engine එක.
-// මේකෙන් වෙන්නේ ඔයා recipe එකක් type කරද්දී වැරදුනොත් (උදා: title එක දාන්න අමතක වුනොත්) ඔයාට error එකක් පෙන්නන එක.
-
-// src/content/config.ts
-// මේක Astro වලට අදාළ "Zod" කියන rule-engine එක.
 import { defineCollection, z } from 'astro:content';
 
-// 'recipes' නමින් collection එකක් හදනවා
+// Regular expressions for validation
+const timeFormatRegex = /^(\d+)\s*(min|hour|hrs?|minutes?)$/i;
+const imagePathRegex = /^\/images\/[a-zA-Z0-9-_\/]+\.(jpg|jpeg|png|webp)$/i;
+
 const recipesCollection = defineCollection({
-  type: 'content', // අපි Markdown file (.md) පාවිච්චි කරනවා
+  type: 'content',
   schema: z.object({
-    title: z.string(),
-    description: z.string().max(160, "SEO Description එක අකුරු 160ට අඩු වෙන්න ඕන"),
+    title: z.string().min(5).max(100),
+    description: z.string().min(10).max(160, "SEO description must be under 160 characters"),
     publishDate: z.date(),
-    image: z.string(), // Photo එකට path එක
-    category: z.string(),
-    tags: z.array(z.string()),
-    prepTime: z.string(), // e.g., "15 min"
-    cookTime: z.string(), // e.g., "30 min"
-    servings: z.number(),
+    image: z.string().regex(imagePathRegex, "Image path must be valid and in /images/ directory"),
+    category: z.string().min(3),
+    tags: z.array(z.string().min(2)),
+    prepTime: z.string().regex(timeFormatRegex, "Prep time must be in format: '30 min' or '2 hours'"),
+    cookTime: z.string().regex(timeFormatRegex, "Cook time must be in format: '30 min' or '2 hours'"),
+    servings: z.number().min(1).max(50),
     
     // Homepage එකේ "Featured" විදිහට පෙන්නන්න
     isFeatured: z.boolean().default(false), 

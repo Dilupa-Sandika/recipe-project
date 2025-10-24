@@ -1,12 +1,50 @@
 ---
-// src/components/Seo.astro
-// අපි install කරපු 'astro-seo' package එක මෙතන import කරනවා
+// src/components/Seo.astro (Corrected Image URL Handling)
 import { SEO } from "astro-seo";
 import type { Props as SEOProps } from "astro-seo";
 
 export interface Props extends SEOProps {}
 
 const props = Astro.props;
+
+// --- CHANGE START ---
+// image URL එක හරියට හදමු
+let imageUrl = '/images/social-hero.jpg'; // Default image
+// Props වලින් image එකක් ආවොත් ඒක use කරමු
+const imageFromProps = props.openGraph?.basic?.image; 
+
+if (imageFromProps) {
+  // Check if it's already a full URL
+  if (imageFromProps.startsWith('http://') || imageFromProps.startsWith('https://')) {
+    imageUrl = imageFromProps;
+  } else {
+    // Relative path එකක් නම්, Astro.site එක use කරලා full URL එක හදමු
+    // හැබැයි Astro.site එක තියෙනවද කියලත් check කරමු
+    if (Astro.site) {
+       try {
+         imageUrl = new URL(imageFromProps, Astro.site).href;
+       } catch (e) {
+         console.error(`Error creating URL for image: ${imageFromProps}`, e);
+         // Fallback to default if URL creation fails
+         imageUrl = new URL('/images/social-hero.jpg', Astro.site).href; 
+       }
+    } else {
+       // Astro.site නැත්නම්, relative path එකම use කරමු (dev server එකේ වැඩ කරයි)
+       imageUrl = imageFromProps;
+    }
+  }
+} else if (Astro.site) {
+    // Default image එකටත් full URL එක හදමු (Astro.site තියෙනවා නම්)
+    try {
+        imageUrl = new URL('/images/social-hero.jpg', Astro.site).href;
+    } catch (e) {
+        console.error('Error creating URL for default social image', e);
+        imageUrl = '/images/social-hero.jpg'; // Fallback if error
+    }
+}
+
+// --- CHANGE END ---
+
 ---
 <SEO
   {...props}
@@ -16,26 +54,30 @@ const props = Astro.props;
   openGraph={{
     basic: {
       title: props.title || "My Awesome Recipe Site",
-      type: "website",
-      // default social media image එකක්. 
-      // /public/images/social-hero.jpg වගේ තැනක මේ photo එක දාන්න
-      image: new URL(props.openGraph?.basic?.image || '/images/social-hero.jpg', Astro.site).href,
-      url: Astro.url,
+      type: props.openGraph?.basic?.type || "website", // Use type from props if available
+      image: imageUrl, // මෙතනට අලුත් variable එක දැම්මා
+      url: Astro.url.toString(), 
     },
+    // props වලින් එන අනිත් openGraph details add වෙන්න ඉඩ තියමු
+    ...(props.openGraph || {}) 
   }}
   twitter={{
     card: "summary_large_image",
-    // ඔයාගේ twitter account එකේ handle එක මෙතන දාන්න
     site: "@YourTwitterHandle", 
     creator: "@YourTwitterHandle",
+     // props වලින් එන අනිත් twitter details add වෙන්න ඉඩ තියමු
+    ...(props.twitter || {})
   }}
   extend={{
     meta: [
       { name: "viewport", content: "width=device-width, initial-scale=1.0" },
+       // props වලින් එන අනිත් meta tags add වෙන්න ඉඩ තියමු
+      ...(props.extend?.meta || [])
     ],
     link: [
-      // /public/favicon.ico තැනට ඔයාගේ site icon එක දාන්න
-      { rel: "icon", href: "/favicon.ico" }
+      { rel: "icon", href: "/favicon.ico" },
+       // props වලින් එන අනිත් link tags add වෙන්න ඉඩ තියමු
+      ...(props.extend?.link || [])
     ]
   }}
 />

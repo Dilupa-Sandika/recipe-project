@@ -1,31 +1,37 @@
 ---
-// src/pages/category/[category].astro
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import RecipeCard from '../../components/RecipeCard.astro';
 import { getCollection } from 'astro:content';
 
 export async function getStaticPaths() {
-  const allRecipes = await getCollection('recipes');
+  try {
+    const allRecipes = await getCollection('recipes');
+    
+    // Get unique categories and validate them
+    const uniqueCategories = [...new Set(
+      allRecipes.map(recipe => {
+        const category = recipe.data.category.toLowerCase().trim();
+        if (!category) throw new Error(`Invalid category in recipe: ${recipe.slug}`);
+        return category;
+      })
+    )];
 
-  // හැම recipe එකකම category එක අරගෙන, unique list එකක් හදනවා
-  const uniqueCategories = [
-    ...new Set(allRecipes.map(recipe => recipe.data.category.toLowerCase()))
-  ];
+    // Generate pages for each valid category
+    return uniqueCategories.map(category => {
+      const filteredRecipes = allRecipes.filter(
+        recipe => recipe.data.category.toLowerCase().trim() === category
+      ).sort((a, b) => b.data.publishDate.getTime() - a.data.publishDate.getTime());
 
-  // හැම category එකකටම page එකක් හදනවා
-  return uniqueCategories.map(category => {
-    // ඒ category එකට අදාළ recipes ටික filter කරනවා
-    const filteredRecipes = allRecipes.filter(
-      recipe => recipe.data.category.toLowerCase() === category
-    );
-    return {
-      params: { category: category },
-      props: { 
-        recipes: filteredRecipes,
-        categoryName: allRecipes.find(r => r.data.category.toLowerCase() === category)?.data.category 
-        // Capitalized name එක ගන්න (e.g., "Chicken")
-      },
-    };
+      return {
+        params: { category },
+        props: { 
+          recipes: filteredRecipes,
+          categoryName: allRecipes.find(
+            r => r.data.category.toLowerCase().trim() === category
+          )?.data.category || category,
+          totalRecipes: filteredRecipes.length
+        },
+      };
   });
 }
 

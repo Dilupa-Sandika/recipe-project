@@ -1,3 +1,18 @@
+---
+// src/layouts/BaseLayout.astro (Restored with Seo component)
+import Seo from '../components/Seo.astro'; // <-- UNCOMMENTED
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+// SEO props ගන්න
+import type { Props as SEOProps } from 'astro-seo'; // <-- UNCOMMENTED
+export interface Props {
+  seo?: SEOProps; // <-- UNCOMMENTED
+}
+const { seo } = Astro.props; // <-- UNCOMMENTED
+
+---
+{/* Global Styles (වෙනසක් නෑ) */}
 <style is:global>
   /* Google Font Import */
   @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;900&display=swap');
@@ -39,7 +54,7 @@
     border-radius: 8px; /* Rounded corners for images */
   }
 
-  /* Utility Classes (අපි පාවිච්චි කරපු) */
+  /* Utility Classes (වෙනසක් නෑ) */
   .max-w-5xl { max-width: 1024px; }
   .mx-auto { margin-left: auto; margin-right: auto; }
   .px-6 { padding-left: 1.5rem; padding-right: 1.5rem; }
@@ -69,3 +84,28 @@
   .hover\:text-orange-600:hover { color: var(--color-primary-dark); }
   .text-center { text-align: center; }
 </style>
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    
+    {/* --- SEO Component එක ආයෙත් දැම්මා --- */}
+    <Seo {...seo} /> 
+    {/* ------------------------------------ */}
+    
+    <title>{seo?.title || 'My Recipe Site'}</title> {/* Use seo prop */}
+  </head>
+  <body>
+    <Header />
+    
+    <main class="max-w-5xl mx-auto px-6 py-8"> {/* Line 54 */}
+      <slot />
+    </main>
+    
+    <Footer />
+    
+  </body>
+</html>

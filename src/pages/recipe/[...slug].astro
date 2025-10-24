@@ -1,56 +1,50 @@
 ---
-// src/pages/recipe/[...slug].astro
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getCollection, type CollectionEntry } from 'astro:content';
+import sanitizeHtml from 'sanitize-html';
 
-// 1. Static Paths හදන function එක (වෙනසක් නෑ)
 export async function getStaticPaths() {
-  const allRecipes = await getCollection('recipes');
-  return allRecipes.map(recipe => ({
-    params: { slug: recipe.slug },
-    props: { recipe },
-  }));
+  try {
+    const allRecipes = await getCollection('recipes');
+    return allRecipes.map(recipe => ({
+      params: { slug: recipe.slug },
+      props: { recipe },
+    }));
+  } catch (error) {
+    console.error('Error generating recipe paths:', error);
+    return [];
+  }
 }
 
-// 2. Props ගැනීම (වෙනසක් නෑ)
-type Props = {
+interface Props {
   recipe: CollectionEntry<'recipes'>;
-};
+}
+
 const { recipe } = Astro.props;
 
-// 3. Markdown content render කිරීම (වෙනසක් නෑ)
-const { Content } = await recipe.render();
+try {
+  const { Content } = await recipe.render();
+  
+  // Generate Schema.org JSON-LD
+  const recipeSchema = {
+    "@context": "https://schema.org",
+    "@type": "Recipe",
+    name: recipe.data.title,
+    description: recipe.data.description,
+    image: new URL(recipe.data.image, Astro.site).toString(),
+    prepTime: `PT${recipe.data.prepTime.replace(/\s+/g, '')}`,
+    cookTime: `PT${recipe.data.cookTime.replace(/\s+/g, '')}`,
+    recipeYield: `${recipe.data.servings} servings`,
+    datePublished: recipe.data.publishDate.toISOString(),
+    author: {
+      "@type": "Organization",
+      name: "Recipe Project"
+    }
+  };
 
-// --- SCHEMA IMPROVEMENT START ---
-// 4. අමු Markdown content එකෙන් Ingredients සහ Instructions ගන්න code එක
-const body = recipe.body; // Raw markdown content
+// --- SCHEMA EXTRACTION CODE එක සම්පූර්ණයෙන්ම අයින් කලා ---
 
-// Ingredients ටික array එකකට ගන්නවා
-let ingredients: string[] = [];
-const ingredientsMatch = body.match(/##\s+Ingredients\s*\n([\s\S]*?)(?=\n##\s+|$)/);
-if (ingredientsMatch && ingredientsMatch[1]) {
-  const ingredientLines = ingredientsMatch[1].match(/^[*\-]\s+(.*)/gm);
-  if (ingredientLines) {
-    ingredients = ingredientLines.map(line => line.replace(/^[*\-]\s+/, '').trim());
-  }
-}
-
-// Instructions ටික HowToStep objects array එකකට ගන්නවා
-let instructions: { "@type": string; "text": string }[] = [];
-const instructionsMatch = body.match(/##\s+Instructions\s*\n([\s\S]*?)(?=\n##\s+|$)/);
-if (instructionsMatch && instructionsMatch[1]) {
-  const instructionLines = instructionsMatch[1].match(/^\d+\.\s+(.*)/gm);
-  if (instructionLines) {
-    instructions = instructionLines.map(line => ({
-       "@type": "HowToStep",
-       "text": line.replace(/^\d+\.\s+/, '').trim()
-    }));
-  }
-}
-// --- SCHEMA IMPROVEMENT END ---
-
-
-// 5. SEO details (jsonLD එක update කලා)
+// 4. SEO details (jsonLD එක සම්පූර්ණයෙන්ම අයින් කලා)
 const seoProps = {
   title: recipe.data.title,
   description: recipe.data.description,
@@ -61,22 +55,7 @@ const seoProps = {
       image: new URL(recipe.data.image, Astro.site).href,
     }
   },
-  jsonLD: {
-    '@context': 'https://schema.org',
-    '@type': 'Recipe',
-    name: recipe.data.title,
-    description: recipe.data.description,
-    image: new URL(recipe.data.image, Astro.site).href,
-    prepTime: `PT${recipe.data.prepTime.replace(' min', 'M')}`,
-    cookTime: `PT${recipe.data.cookTime.replace(' min', 'M')}`,
-    totalTime: `PT${parseInt(recipe.data.prepTime) + parseInt(recipe.data.cookTime)}M`,
-    recipeYield: `${recipe.data.servings} servings`,
-    recipeCategory: recipe.data.category,
-    // --- මෙන්න අලුත් data ---
-    recipeIngredient: ingredients, 
-    recipeInstructions: instructions,
-    // ----------------------
-  }
+  // jsonLD එක මෙතන නෑ
 };
 ---
 <style>
@@ -255,6 +234,7 @@ const seoProps = {
           </iframe>
         </div>
       )}
+
       <div class="recipe-content">
         <Content />
       </div>
@@ -272,6 +252,5 @@ const seoProps = {
         )}
       </aside>
     </div>
-
   </article>
 </BaseLayout>
