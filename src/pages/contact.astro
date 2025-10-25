@@ -1,5 +1,5 @@
 ---
-// src/pages/contact.astro (Removed inline styles)
+// src/pages/contact.astro (Added action attribute)
 import BaseLayout from '../layouts/BaseLayout.astro';
 
 const seoProps = {
@@ -7,7 +7,18 @@ const seoProps = {
   description: 'Get in touch with Vegas Recipes. Send us your questions or suggestions!'
 };
 ---
-{/* --- Style block removed, styles now come from global.css --- */}
+{/* Styles (No Change Needed) */}
+<style>
+  .contact-form { background-color: var(--color-white); padding: 2rem; border-radius: 8px; border: 1px solid var(--color-border); max-width: 600px; margin: 2rem auto; }
+  .form-group { margin-bottom: 1.5rem; }
+  .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--color-text); }
+  .form-group input, .form-group textarea { width: 100%; padding: 0.75rem; border: 1px solid var(--color-border); border-radius: 4px; font-family: var(--font-main); font-size: 1rem; box-sizing: border-box; }
+  .form-group textarea { min-height: 150px; resize: vertical; }
+  .submit-button { background-color: var(--color-primary); color: var(--color-white); padding: 0.75rem 1.5rem; border: none; border-radius: 4px; font-weight: 600; font-size: 1rem; cursor: pointer; transition: background-color 0.2s; }
+  .submit-button:hover { background-color: var(--color-primary-dark); }
+  .text-center { text-align: center; } /* Add this if not in global.css */
+  .hidden { display: none; } /* Add this if not in global.css */
+</style>
 
 <BaseLayout seo={seoProps}>
   <div class="container text-center">
@@ -15,7 +26,16 @@ const seoProps = {
       <p style="color: var(--color-text-light); margin-bottom: 1rem;">Have a question, suggestion, or just want to say hello? Fill out the form below!</p>
   </div>
 
-  <form name="contact" method="POST" data-netlify="true" netlify-honeypot="bot-field" class="contact-form">
+  {/* --- FIX: Added action="/thank-you/" --- */}
+  <form
+    name="contact"
+    method="POST"
+    data-netlify="true"
+    netlify-honeypot="bot-field"
+    action="/thank-you/" /* Redirect to thank you page on success */
+    class="contact-form"
+  >
+  {/* --- END FIX --- */}
     <p class="hidden"><label> Don’t fill this out if you’re human: <input name="bot-field" /> </label></p>
     <input type="hidden" name="form-name" value="contact" />
     <div class="form-group">
@@ -34,4 +54,5 @@ const seoProps = {
         <button type="submit" class="submit-button">Send Message</button>
     </div>
   </form>
+
 </BaseLayout>

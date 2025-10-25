@@ -1,0 +1,57 @@
+---
+// src/pages/thank-you/index.astro
+import BaseLayout from '../../layouts/BaseLayout.astro'; // Adjust path if needed
+
+const seoProps = {
+  title: 'Thank You! | Vegas Recipes',
+  description: 'Your message has been received.',
+  // Prevent search engines from indexing this page
+  extend: {
+    meta: [{ name: 'robots', content: 'noindex, follow' }]
+  }
+};
+---
+<style>
+  .thank-you-message {
+    text-align: center;
+    padding: 4rem 1rem;
+    background-color: var(--color-white);
+    border-radius: 8px;
+    border: 1px solid var(--color-border);
+    margin-top: 2rem;
+  }
+  .thank-you-message h1 {
+    color: var(--color-primary);
+    margin-bottom: 1rem;
+    border-bottom: none; /* Remove border from H1 */
+  }
+  .thank-you-message p {
+    color: var(--color-text-light);
+    font-size: 1.1rem;
+  }
+   .thank-you-message a {
+       display: inline-block;
+       margin-top: 1.5rem;
+       background-color: var(--color-primary);
+       color: var(--color-white);
+       padding: 0.75rem 1.5rem;
+       border-radius: 4px;
+       font-weight: 600;
+       text-decoration: none;
+       transition: background-color 0.2s;
+   }
+    .thank-you-message a:hover {
+        background-color: var(--color-primary-dark);
+        text-decoration: none;
+    }
+</style>
+
+<BaseLayout seo={seoProps}>
+  <div class="container">
+    <div class="thank-you-message">
+      <h1>Thank You!</h1>
+      <p>Your message has been sent successfully. We'll get back to you as soon as possible.</p>
+      <a href="/">Return to Homepage</a>
+    </div>
+  </div>
+</BaseLayout>
