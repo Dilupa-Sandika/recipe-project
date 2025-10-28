@@ -54,7 +54,7 @@ Looking for a comforting meal that's **easy to make**? This classic _meatloaf_ i
 9.  **Rest Before Serving:** Once baked, let the meatloaf rest in the pan or on the baking sheet for at least 10 minutes before slicing. This important step allows the juices to redistribute, resulting in a more tender and flavorful meatloaf that holds its shape.
 10. **Serve:** Slice and serve hot with your favorite side dishes.
 
-{/* --- Horizontal line comment removed --- */}
+
 
 ## Recommended Tools
 
