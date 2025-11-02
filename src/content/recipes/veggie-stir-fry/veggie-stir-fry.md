@@ -2,7 +2,7 @@
 title: "Quick Veggie Stir-Fry"
 description: "A colorful and quick vegetable stir-fry that's healthy and flavorful."
 publishDate: 2025-10-23
-image: "/images/sample-chicken-curry.jpg"
+image: "./sample-chicken-curry.jpg"
 category: "Vegetarian"
 tags: ["vegetarian","stir-fry","quick"]
 prepTime: "10 min"

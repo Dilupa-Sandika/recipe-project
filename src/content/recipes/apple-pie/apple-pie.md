@@ -2,7 +2,7 @@
 title: "Classic Apple Pie"
 description: "Homestyle apple pie with a flaky crust and cinnamon-spiced filling."
 publishDate: 2025-10-17
-image: "/images/sample-chicken-curry.jpg"
+image: "./sample-chicken-curry.jpg"
 category: "Dessert"
 tags: ["apple","pie","dessert"]
 prepTime: "25 min"

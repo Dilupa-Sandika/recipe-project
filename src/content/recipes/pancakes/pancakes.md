@@ -2,7 +2,7 @@
 title: "Fluffy Pancakes"
 description: "Light and fluffy pancakes for a perfect weekend breakfast."
 publishDate: 2025-10-22
-image: "/images/sample-chicken-curry.jpg"
+image: "./sample-chicken-curry.jpg"
 category: "Breakfast"
 tags: ["pancake","breakfast","easy","fluffy"]
 prepTime: "10 min"

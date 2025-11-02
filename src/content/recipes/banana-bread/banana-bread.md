@@ -2,7 +2,7 @@
 title: "Easy Banana Bread"
 description: "Moist and simple banana bread that's perfect for using up ripe bananas."
 publishDate: 2025-10-20
-image: "/images/sample-chicken-curry.jpg"
+image: "./sample-chicken-curry.jpg"
 category: "Baking"
 tags: ["banana","bread","baking","easy"]
 prepTime: "15 min"

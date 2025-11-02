@@ -2,7 +2,7 @@ import { defineCollection, z } from 'astro:content';
 
 // Regular expressions for validation
 const timeFormatRegex = /^(\d+)\s*(min|hour|hrs?|minutes?)$/i;
-const imagePathRegex = /^\/images\/[a-zA-Z0-9-_\/]+\.(jpg|jpeg|png|webp)$/i;
+const imagePathRegex = /^(.\/)?[a-zA-Z0-9-_\/]+\.(jpg|jpeg|png|webp)$/i;
 
 const recipesCollection = defineCollection({
   type: 'content',

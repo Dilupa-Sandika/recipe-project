@@ -1,5 +1,4 @@
 ---
-// src/components/RecipeCard.astro
 import type { CollectionEntry } from 'astro:content';
 
 interface Props {
@@ -8,10 +7,39 @@ interface Props {
 
 const { recipe } = Astro.props;
 const recipeUrl = `/recipe/${recipe.slug}`;
+// recipe.slug may include folder + filename (e.g. "my-first-recipe/my-first-recipe").
+// Use the folder part as the image folder name so we don't duplicate the slug.
+const recipeFolder = (() => {
+  const fp = recipe.filePath || '';
+  if (fp && fp.split) {
+    const parts = fp.split(/[/\\]+/);
+    const idx = parts.findIndex(p => p === 'recipes');
+    if (idx >= 0 && parts.length > idx + 1) return parts[idx + 1];
+    return parts[0];
+  }
+  return (recipe.slug && recipe.slug.split) ? recipe.slug.split('/')[0] : recipe.slug;
+})();
 ---
 <div class="recipe-card" data-title={recipe.data.title.toLowerCase()} data-tags={(recipe.data.tags || []).join(' ').toLowerCase()}>
   <a href={recipeUrl} class="card-image-link">
-    <img src={recipe.data.image} alt={recipe.data.title} />
+    <img
+      src={(() => {
+        const img = recipe.data.image || '';
+        // Relative image placed next to the markdown: ./my-image.jpg
+        if (img.startsWith && img.startsWith('./')) {
+          return `/content/recipes/${recipeFolder}/${img.slice(2)}`;
+        }
+        // Old absolute reference that pointed to public/images/foo.jpg
+        // Map it to the recipe folder: /content/recipes/<slug>/foo.jpg
+        if (img.startsWith && img.startsWith('/images/')) {
+          const base = img.split('/').pop();
+          return `/content/recipes/${recipeFolder}/${base}`;
+        }
+        // Otherwise return as-is (absolute URL or external URL)
+        return img;
+      })()}
+      alt={recipe.data.title}
+    />
   </a>
   <div class="card-content">
     <a href={`/category/${recipe.data.category.toLowerCase()}`} class="card-category">

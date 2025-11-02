@@ -6,6 +6,8 @@
     "dev": "astro dev",
     "start": "astro dev",
     "build": "astro build",
+    "prebuild": "npm run copy:content-assets",
+    "copy:content-assets": "node scripts/copy-recipe-assets.js",
     "preview": "astro preview",
     "astro": "astro"
   },

@@ -1,8 +1,64 @@
 ---
-// src/pages/recipe/[...slug].astro (Full version with sanitize-html)
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getCollection, type CollectionEntry } from 'astro:content';
 import sanitizeHtml from 'sanitize-html'; // Make sure this is installed
+
+// --- 1. HARIMA IMAGE PATH EKA HADANA HELPER FUNCTION EKA ---
+function getPublicImageUrl(recipe: CollectionEntry<'recipes'>, imagePath: string) {
+  if (!imagePath) return '';
+  
+  // recipe.slug එක "folder/file" විදිහට එන්න පුළුවන් නිසා අපි folder එක විතරක් ගමු.
+  const recipeFolder = (() => {
+    const fp = recipe.filePath || ''; // 'src/content/recipes/recipe-folder/file.md'
+    if (fp && fp.split) {
+      const parts = fp.split(/[/\\]+/); // [ 'src', 'content', 'recipes', 'recipe-folder', 'file.md' ]
+      const idx = parts.findIndex(p => p === 'recipes');
+      if (idx >= 0 && parts.length > idx + 1) return parts[idx + 1]; // 'recipe-folder'
+    }
+    // Fallback if filePath is weird
+    return (recipe.slug && recipe.slug.split) ? recipe.slug.split('/')[0] : recipe.slug;
+  })();
+
+  // ./my-image.jpg -> /content/recipes/recipe-folder/my-image.jpg
+  if (imagePath.startsWith('./')) {
+    return `/content/recipes/${recipeFolder}/${imagePath.slice(2)}`;
+  }
+  
+  // /images/old-image.jpg -> /content/recipes/recipe-folder/old-image.jpg
+  if (imagePath.startsWith('/images/')) {
+    const base = imagePath.split('/').pop();
+    return `/content/recipes/${recipeFolder}/${base}`;
+  }
+  
+  // http://... or /content/recipes/... (already correct)
+  return imagePath;
+}
+// Helper to resolve image paths for both main and inline images
+function getPublicImageUrl(recipe: CollectionEntry<'recipes'>, imagePath: string) {
+  if (!imagePath) return '';
+  const recipeFolder = (() => {
+    const fp = recipe.filePath || '';
+    if (fp && fp.split) {
+      const parts = fp.split(/[/\\]+/);
+      const idx = parts.findIndex(p => p === 'recipes');
+      if (idx >= 0 && parts.length > idx + 1) return parts[idx + 1];
+    }
+    return (recipe.slug && recipe.slug.split) ? recipe.slug.split('/')[0] : recipe.slug;
+  })();
+  // ./my-image.jpg or ./step1.jpg
+  if (imagePath.startsWith('./')) {
+    return `/content/recipes/${recipeFolder}/${imagePath.slice(2)}`;
+  }
+  // /images/old-image.jpg
+  if (imagePath.startsWith('/images/')) {
+    const base = imagePath.split('/').pop();
+    return `/content/recipes/${recipeFolder}/${base}`;
+  }
+  // Already public path or external
+  return imagePath;
+}
+// --- END HELPER FUNCTION ---
+
 
 // Static Paths (වෙනසක් නෑ)
 export async function getStaticPaths() {
@@ -24,15 +80,29 @@ interface Props {
 
 const { recipe } = Astro.props;
 
+// --- 2. IMAGE PATH EKA EKA PARAK HADAGAMU ---
+const mainImageUrl = getPublicImageUrl(recipe, recipe.data.image);
+const mainImageFullUrl = Astro.site ? new URL(mainImageUrl, Astro.site).toString() : mainImageUrl;
+
 let Content;
-let seoProps = { // Default SEO props in case of error
+let seoProps = { // Default SEO props
     title: recipe?.data?.title || 'Recipe Error',
     description: 'Could not load recipe details.'
 };
+// MDX components mapping (populated at render time so template can access it)
+let mdxComponents = {};
 
 try {
   const renderResult = await recipe.render();
-  Content = renderResult.Content; // Get the component to render markdown
+  Content = renderResult.Content; 
+
+  // Provide MDX components mapping from script-side to avoid inline JSX in the template
+  // Declare mdxComponents in an outer scope so the template can access it below
+  
+  
+  mdxComponents = {
+    img: (props) => Astro.createElement('img', { ...props, src: getPublicImageUrl(recipe, props.src) })
+  };
 
   // --- Sanitize and Extract Schema Data ---
   const body = recipe.body;
@@ -50,7 +120,10 @@ try {
   let instructions: { "@type": string; "text": string }[] = [];
   const instructionsMatch = body.match(/##\s+Instructions\s*\n([\s\S]*?)(?=\n##\s+|$)/);
   if (instructionsMatch && instructionsMatch[1]) {
-    const instructionLines = instructionsMatch[1].match(/^\d+\.\s+(.*)/gm);
+    // --- 4. SCHEMA EKA SADARA INSTRCTIONS WALIN IMAGE TAGS AIN KARAMU ---
+    const cleanInstructions = instructionsMatch[1].replace(/!\[.*?\]\(.*?\)/g, ''); // Remove markdown images
+    
+    const instructionLines = cleanInstructions.match(/^\d+\.\s+(.*)/gm);
     if (instructionLines) {
       instructions = instructionLines.map(line => ({
          "@type": "HowToStep",
@@ -66,19 +139,19 @@ try {
     "@type": "Recipe",
     name: recipe.data.title,
     description: recipe.data.description,
-    image: Astro.site ? new URL(recipe.data.image, Astro.site).toString() : recipe.data.image, // Handle missing Astro.site in dev
-    prepTime: `PT${recipe.data.prepTime.replace(/\s+/g, '')}`, // Remove spaces
-    cookTime: `PT${recipe.data.cookTime.replace(/\s+/g, '')}`, // Remove spaces
+    // --- 3. HADAPU FULL URL EKA MEHETHA DANNA ---
+    image: mainImageFullUrl,
+    prepTime: `PT${recipe.data.prepTime.replace(/\s+/g, '')}`, 
+    cookTime: `PT${recipe.data.cookTime.replace(/\s+/g, '')}`, 
     recipeYield: `${recipe.data.servings} servings`,
-    datePublished: recipe.data.publishDate.toISOString(), // Format date
+    datePublished: recipe.data.publishDate.toISOString(),
     recipeCategory: recipe.data.category,
-    recipeIngredient: ingredients, // Use sanitized ingredients
-    recipeInstructions: instructions, // Use sanitized instructions
-    author: { // Add author info if you want
+    recipeIngredient: ingredients, 
+    recipeInstructions: instructions,
+    author: { 
         "@type": "Person",
-        name: "Vegas Recipes" // Or your name
+        name: "Vegas Recipes" 
     }
-    // Add keywords if needed: keywords: recipe.data.tags.join(', ')
   };
 
   // Update seoProps
@@ -89,13 +162,10 @@ try {
       basic: {
         title: recipe.data.title,
         type: 'article',
-        image: recipe.data.image, // Pass relative path to Seo component
+        // --- 3. HADAPU HARIMA PATH EKA MEHETATH DANNA ---
+        image: mainImageUrl, // Pass public path
       }
     },
-    // Pass the schema object directly to the Seo component
-    // Note: astro-seo doesn't directly support jsonLD prop like this.
-    // We'll need to adjust Seo.astro later if we want this exact structure.
-    // For now, let's keep it simple to avoid errors.
     // extend: {
     //   meta: [{ name: 'schema:recipe', content: JSON.stringify(recipeSchema) }]
     // }
@@ -103,11 +173,23 @@ try {
 
 } catch (error) {
   console.error(`Error rendering recipe "${recipe?.slug}":`, error);
-  // Keep default seoProps defined above
-  Content = () => Astro.createElement('p', null, 'Error loading recipe content.'); // Show an error message
+  Content = () => Astro.createElement('p', null, 'Error loading recipe content.');
 }
 ---
+
 <style>
+  /* --- 5. INSTRUCTION EKE IMAGES WALATA STYLE EKA --- */
+  .recipe-content :global(img) {
+    max-width: 100%;
+    height: auto;
+    border-radius: 12px;
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid var(--color-border);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  }
+  /* --- END STYLE --- */
+
   .video-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; width: 100%; background: #000; border-radius: 12px; grid-column: 1 / -1; margin-bottom: 2rem; }
   .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
   .recipe-header { text-align: center; border-bottom: 1px solid var(--color-border); padding-bottom: 2rem; }
@@ -144,7 +226,12 @@ try {
       </div>
     </header>
 
-    <img src={recipe.data.image} alt={recipe.data.title} class="recipe-image" />
+    {/* --- 3. HADAPU IMAGE PATH EKA MEHETATH DANNA --- */}
+    <img
+      src={mainImageUrl}
+      alt={recipe.data.title}
+      class="recipe-image"
+    />
 
     <div class="recipe-content-wrapper">
       {recipe.data.youtubeId && (
@@ -160,8 +247,8 @@ try {
       )}
 
       <div class="recipe-content">
-        {/* Render the markdown content */}
-        <Content />
+        {/* Render the markdown content, patch image URLs for inline images */}
+        <Content components={mdxComponents} />
       </div>
 
       <aside class="sidebar">

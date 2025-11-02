@@ -1,8 +1,8 @@
 ---
 title: "Easy Meatloaf Recipe: Delicious & Simple"
-description: "A comforting and easy-to-make classic meatloaf recipe made with simple ingredients. A family favorite perfect for any time, especially weeknights."
-publishDate: 2025-10-28 # <-- Update this date
-image: "/images/easy-meatloaf.jpg" # <-- Add this image to public/images/
+description: "A comforting, easy-to-make classic meatloaf made with simple ingredients — a family favorite for weeknights."
+publishDate: 2025-10-28
+image: "./easy-meatloaf.jpg"
 category: "Beef"
 tags: ["meatloaf", "easy", "comfort food", "beef", "dinner", "simple recipe", "family favorite", "classic recipe"]
 prepTime: "15 min"
@@ -16,6 +16,7 @@ affiliateLinks:
   - label: "My Favorite Meat Thermometer"
     url: "https://www.amazon.com/your-affiliate-link-thermometer"
 # youtubeId: "VIDEO_ID"
+
 ---
 
 ## Description
@@ -48,10 +49,16 @@ Looking for a comforting meal that's **easy to make**? This classic _meatloaf_ i
 3.  **Combine Meatloaf Ingredients:** In a large bowl, add the ground beef, the soaked breadcrumb mixture, lightly beaten egg, finely chopped onion, minced garlic, 1/4 cup ketchup, Worcestershire sauce, salt, and black pepper.
 4.  **Mix Gently:** Use your hands to gently mix all the ingredients until they are *just combined*. **Crucial tip: Avoid overmixing**, as this can lead to a dense and tough meatloaf.
 5.  **Shape the Loaf:** Transfer the meat mixture to your prepared loaf pan, pressing gently to fill the pan, or shape it into a rectangular loaf directly on the lined baking sheet.
+
+  ![Meatloaf mixture shaped in a pan before baking](./easy-meatloaf-step-1.jpg)
+
 6.  **Prepare the Glaze:** In a separate small bowl, whisk together the remaining 1/4 cup ketchup, brown sugar, and apple cider vinegar until smooth.
 7.  **First Glaze & Bake:** Spread half of the prepared glaze evenly over the top of the meatloaf. Place it in the preheated oven and bake for 45 minutes.
 8.  **Second Glaze & Finish Baking:** Remove the meatloaf from the oven and carefully spread the remaining glaze over the top. Return it to the oven and bake for an additional 10-15 minutes. The meatloaf is done when the internal temperature reaches 160°F (71°C) on a meat thermometer.
 9.  **Rest Before Serving:** Once baked, let the meatloaf rest in the pan or on the baking sheet for at least 10 minutes before slicing. This important step allows the juices to redistribute, resulting in a more tender and flavorful meatloaf that holds its shape.
+
+  ![Cooked and sliced meatloaf on a white plate](./easy-meatloaf-step-2.jpg)
+
 10. **Serve:** Slice and serve hot with your favorite side dishes.
 
 

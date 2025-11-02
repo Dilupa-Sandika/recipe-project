@@ -2,7 +2,7 @@
 title: "Classic Chocolate Chip Cookies"
 description: "Crisp on the edges, chewy in the center—classic chocolate chip cookies."
 publishDate: 2025-10-18
-image: "/images/sample-chicken-curry.jpg"
+image: "./sample-chicken-curry.jpg"
 category: "Dessert"
 tags: ["cookies","dessert","chocolate"]
 prepTime: "15 min"

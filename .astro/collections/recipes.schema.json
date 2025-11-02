@@ -35,7 +35,7 @@
         },
         "image": {
           "type": "string",
-          "pattern": "^\\/images\\/[a-zA-Z0-9-_\\/]+\\.(jpg|jpeg|png|webp)$",
+          "pattern": "^(.\\/)?[a-zA-Z0-9-_\\/]+\\.(jpg|jpeg|png|webp)$",
           "errorMessage": {
             "pattern": "Image path must be valid and in /images/ directory"
           }

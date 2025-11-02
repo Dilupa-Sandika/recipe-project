@@ -2,7 +2,7 @@
 title: "Simple Avocado Toast"
 description: "A quick and healthy avocado toast recipe for busy mornings."
 publishDate: 2025-10-19
-image: "/images/sample-chicken-curry.jpg"
+image: "./sample-chicken-curry.jpg"
 category: "Breakfast"
 tags: ["avocado","breakfast","easy"]
 prepTime: "5 min"

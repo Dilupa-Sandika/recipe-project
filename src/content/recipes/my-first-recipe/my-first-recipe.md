@@ -2,7 +2,7 @@
 title: "The Best Simple Chicken Curry"
 description: "A quick and easy chicken curry recipe that is perfect for a weeknight dinner, targeting our USA audience."
 publishDate: 2025-10-24
-image: "/images/sample-chicken-curry.jpg"
+image: "./sample-chicken-curry.jpg"
 category: "Chicken"
 tags: ["curry", "easy", "weeknight", "chicken"]
 prepTime: "10 min"
