@@ -9,14 +9,20 @@ prepTime: "15 min"
 cookTime: "1 hour"
 servings: 6
 isFeatured: false
-# Add your affiliate links here if you have them for this recipe:
-affiliateLinks:
-  - label: "Buy a Good Loaf Pan on Amazon"
-    url: "https://www.amazon.com/your-affiliate-link-loafpan"
-  - label: "My Favorite Meat Thermometer"
-    url: "https://www.amazon.com/your-affiliate-link-thermometer"
-# youtubeId: "VIDEO_ID"
 
+# --- MODIFICATION: Both sections now have example links ---
+
+recommendedTools:
+  - label: "Buy a Good Loaf Pan"
+    url: "https://amazon.com/your-link"
+  - label: "My Favorite Meat Thermometer"
+    url: "https://amazon.com/your-link"
+
+specialtyIngredients:
+  - label: "Lea & Perrins Worcestershire Sauce"
+    url: "https://amazon.com/your-ingredient-link"
+  - label: "Organic Bread Crumbs"
+    url: "https://walmart.com/your-link"
 ---
 
 ## Description
@@ -100,6 +106,18 @@ This classic comfort food pairs well with many traditional side dishes:
 * Garlic bread or dinner rolls
 * A fresh green salad with a simple vinaigrette
 * Steamed green beans or buttered corn
+
+## Watch The Recipe Video
+
+<div class="video-container">
+<iframe
+  src="https://www.youtube.com/embed/IIF3bhR_59M"
+  title="YouTube video player"
+  frameborder="0"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+  allowfullscreen>
+</iframe>
+</div>
 
 ## Frequently Asked Questions (FAQ)
 

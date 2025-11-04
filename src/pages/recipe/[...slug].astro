@@ -1,39 +1,10 @@
 ---
+// src/pages/recipe/[...slug].astro
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getCollection, type CollectionEntry } from 'astro:content';
-import sanitizeHtml from 'sanitize-html'; // Make sure this is installed
+import sanitizeHtml from 'sanitize-html';
 
-// --- 1. HARIMA IMAGE PATH EKA HADANA HELPER FUNCTION EKA ---
-function getPublicImageUrl(recipe: CollectionEntry<'recipes'>, imagePath: string) {
-  if (!imagePath) return '';
-  
-  // recipe.slug එක "folder/file" විදිහට එන්න පුළුවන් නිසා අපි folder එක විතරක් ගමු.
-  const recipeFolder = (() => {
-    const fp = recipe.filePath || ''; // 'src/content/recipes/recipe-folder/file.md'
-    if (fp && fp.split) {
-      const parts = fp.split(/[/\\]+/); // [ 'src', 'content', 'recipes', 'recipe-folder', 'file.md' ]
-      const idx = parts.findIndex(p => p === 'recipes');
-      if (idx >= 0 && parts.length > idx + 1) return parts[idx + 1]; // 'recipe-folder'
-    }
-    // Fallback if filePath is weird
-    return (recipe.slug && recipe.slug.split) ? recipe.slug.split('/')[0] : recipe.slug;
-  })();
-
-  // ./my-image.jpg -> /content/recipes/recipe-folder/my-image.jpg
-  if (imagePath.startsWith('./')) {
-    return `/content/recipes/${recipeFolder}/${imagePath.slice(2)}`;
-  }
-  
-  // /images/old-image.jpg -> /content/recipes/recipe-folder/old-image.jpg
-  if (imagePath.startsWith('/images/')) {
-    const base = imagePath.split('/').pop();
-    return `/content/recipes/${recipeFolder}/${base}`;
-  }
-  
-  // http://... or /content/recipes/... (already correct)
-  return imagePath;
-}
-// Helper to resolve image paths for both main and inline images
+// --- 1. IMAGE PATH HELPER FUNCTION (This is correct, no changes) ---
 function getPublicImageUrl(recipe: CollectionEntry<'recipes'>, imagePath: string) {
   if (!imagePath) return '';
   const recipeFolder = (() => {
@@ -45,22 +16,19 @@ function getPublicImageUrl(recipe: CollectionEntry<'recipes'>, imagePath: string
     }
     return (recipe.slug && recipe.slug.split) ? recipe.slug.split('/')[0] : recipe.slug;
   })();
-  // ./my-image.jpg or ./step1.jpg
   if (imagePath.startsWith('./')) {
     return `/content/recipes/${recipeFolder}/${imagePath.slice(2)}`;
   }
-  // /images/old-image.jpg
   if (imagePath.startsWith('/images/')) {
     const base = imagePath.split('/').pop();
     return `/content/recipes/${recipeFolder}/${base}`;
   }
-  // Already public path or external
   return imagePath;
 }
 // --- END HELPER FUNCTION ---
 
 
-// Static Paths (වෙනසක් නෑ)
+// Static Paths
 export async function getStaticPaths() {
   try {
     const allRecipes = await getCollection('recipes');
@@ -80,26 +48,23 @@ interface Props {
 
 const { recipe } = Astro.props;
 
-// --- 2. IMAGE PATH EKA EKA PARAK HADAGAMU ---
+// --- IMAGE PATHS ---
 const mainImageUrl = getPublicImageUrl(recipe, recipe.data.image);
 const mainImageFullUrl = Astro.site ? new URL(mainImageUrl, Astro.site).toString() : mainImageUrl;
 
 let Content;
-let seoProps = { // Default SEO props
+let seoProps = {
     title: recipe?.data?.title || 'Recipe Error',
     description: 'Could not load recipe details.'
 };
-// MDX components mapping (populated at render time so template can access it)
+let recipeSchema = {};
 let mdxComponents = {};
 
 try {
   const renderResult = await recipe.render();
-  Content = renderResult.Content; 
-
-  // Provide MDX components mapping from script-side to avoid inline JSX in the template
-  // Declare mdxComponents in an outer scope so the template can access it below
+  Content = renderResult.Content;
   
-  
+  // For inline step-by-step images
   mdxComponents = {
     img: (props) => Astro.createElement('img', { ...props, src: getPublicImageUrl(recipe, props.src) })
   };
@@ -120,9 +85,7 @@ try {
   let instructions: { "@type": string; "text": string }[] = [];
   const instructionsMatch = body.match(/##\s+Instructions\s*\n([\s\S]*?)(?=\n##\s+|$)/);
   if (instructionsMatch && instructionsMatch[1]) {
-    // --- 4. SCHEMA EKA SADARA INSTRCTIONS WALIN IMAGE TAGS AIN KARAMU ---
-    const cleanInstructions = instructionsMatch[1].replace(/!\[.*?\]\(.*?\)/g, ''); // Remove markdown images
-    
+    const cleanInstructions = instructionsMatch[1].replace(/!\[.*?\]\(.*?\)/g, ''); 
     const instructionLines = cleanInstructions.match(/^\d+\.\s+(.*)/gm);
     if (instructionLines) {
       instructions = instructionLines.map(line => ({
@@ -134,12 +97,11 @@ try {
   // --- End Sanitize ---
 
   // Generate Schema.org JSON-LD
-  const recipeSchema = {
+  recipeSchema = {
     "@context": "https://schema.org",
     "@type": "Recipe",
     name: recipe.data.title,
     description: recipe.data.description,
-    // --- 3. HADAPU FULL URL EKA MEHETHA DANNA ---
     image: mainImageFullUrl,
     prepTime: `PT${recipe.data.prepTime.replace(/\s+/g, '')}`, 
     cookTime: `PT${recipe.data.cookTime.replace(/\s+/g, '')}`, 
@@ -162,23 +124,19 @@ try {
       basic: {
         title: recipe.data.title,
         type: 'article',
-        // --- 3. HADAPU HARIMA PATH EKA MEHETATH DANNA ---
-        image: mainImageUrl, // Pass public path
+        image: mainImageUrl,
       }
     },
-    // extend: {
-    //   meta: [{ name: 'schema:recipe', content: JSON.stringify(recipeSchema) }]
-    // }
   };
-
 } catch (error) {
   console.error(`Error rendering recipe "${recipe?.slug}":`, error);
   Content = () => Astro.createElement('p', null, 'Error loading recipe content.');
+  seoProps = { title: 'Error', description: 'Could not load recipe' };
 }
 ---
 
 <style>
-  /* --- 5. INSTRUCTION EKE IMAGES WALATA STYLE EKA --- */
+  /* This style now applies to step-by-step images */
   .recipe-content :global(img) {
     max-width: 100%;
     height: auto;
@@ -188,30 +146,134 @@ try {
     border: 1px solid var(--color-border);
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
   }
-  /* --- END STYLE --- */
 
-  .video-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; width: 100%; background: #000; border-radius: 12px; grid-column: 1 / -1; margin-bottom: 2rem; }
-  .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
-  .recipe-header { text-align: center; border-bottom: 1px solid var(--color-border); padding-bottom: 2rem; }
-  .recipe-title { font-size: 2.8rem; font-weight: 900; color: var(--color-text); margin-bottom: 1rem; line-height: 1.3; }
-  .recipe-meta { display: flex; justify-content: center; gap: 1.5rem; color: var(--color-text-light); font-weight: 600; }
-  .recipe-image { margin-top: 2rem; width: 100%; max-height: 500px; object-fit: cover; border-radius: 12px; }
-  .recipe-content-wrapper { display: grid; grid-template-columns: 1fr; gap: 2rem; margin-top: 2rem; }
-  @media (min-width: 768px) { .recipe-content-wrapper { grid-template-columns: 3fr 1fr; } }
-  .recipe-content { background: var(--color-white); border: 1px solid var(--color-border); border-radius: 12px; padding: 2rem; }
-  .recipe-content h2 { font-size: 1.8rem; font-weight: 700; color: var(--color-primary); margin-top: 2rem; margin-bottom: 1rem; border-bottom: 2px solid var(--color-border); padding-bottom: 0.5rem; }
-  .recipe-content ul, .recipe-content ol { padding-left: 1.5rem; line-height: 1.8; color: var(--color-text); }
-  .recipe-content li { margin-bottom: 0.85rem; }
-  .recipe-content li::marker { color: var(--color-primary); font-weight: bold; }
-  .recipe-content p { line-height: 1.8; font-size: 1rem; margin-bottom: 1rem; }
-  .recipe-content strong { color: var(--color-text); }
-  .sidebar { padding-top: 1rem; }
-  .affiliate-box { background: var(--color-white); border: 1px solid var(--color-border); border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03); }
-  .affiliate-box h3 { font-size: 1.2rem; font-weight: 700; color: var(--color-text); margin-top: 0; margin-bottom: 1rem; border-bottom: 1px solid var(--color-border); padding-bottom: 0.5rem; }
-  .affiliate-box a { display: block; background-color: var(--color-primary); color: var(--color-white); font-weight: 600; text-align: center; padding: 0.85rem; border-radius: 8px; margin-bottom: 0.75rem; transition: background-color 0.2s; }
-  .affiliate-box a:hover { background-color: var(--color-primary-dark); text-decoration: none; }
-  .card-category { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--color-primary); display: inline-block; margin-bottom: 0.5rem; }
-  .card-category:hover { text-decoration: none; color: var(--color-primary-dark); }
+  /* --- YOUTUBE VIDEO STYLES REMOVED FROM HERE --- */
+  /* (We will add them to global.css) */
+
+  .recipe-header { 
+    text-align: center; 
+    border-bottom: 1px solid var(--color-border); 
+    padding-bottom: 2rem; 
+  }
+  .recipe-title { 
+    font-size: 2.8rem; 
+    font-weight: 900; 
+    color: var(--color-text); 
+    margin-bottom: 1rem; 
+    line-height: 1.3; 
+  }
+  .recipe-meta { 
+    display: flex; 
+    justify-content: center; 
+    gap: 1.5rem; 
+    color: var(--color-text-light); 
+    font-weight: 600;
+  }
+  .recipe-image { 
+    margin-top: 2rem; 
+    width: 100%; 
+    max-height: 500px; 
+    object-fit: cover; 
+    border-radius: 12px; 
+  }
+  .recipe-content-wrapper { 
+    display: grid; 
+    grid-template-columns: 1fr; 
+    gap: 2rem; 
+    margin-top: 2rem; 
+  }
+  @media (min-width: 768px) { 
+    .recipe-content-wrapper { 
+      grid-template-columns: 3fr 1fr; 
+    } 
+  }
+  .recipe-content { 
+    background: var(--color-white); 
+    border: 1px solid var(--color-border); 
+    border-radius: 12px; 
+    padding: 2rem;
+    overflow-wrap: break-word; /* Fix for long words */
+    word-wrap: break-word;
+  }
+  .recipe-content h2 { 
+    font-size: 1.8rem; 
+    font-weight: 700; 
+    color: var(--color-primary); 
+    margin-top: 2rem; 
+    margin-bottom: 1rem; 
+    border-bottom: 2px solid var(--color-border);
+    padding-bottom: 0.5rem; 
+  }
+  .recipe-content ul, .recipe-content ol { 
+    padding-left: 1.5rem; 
+    line-height: 1.8; 
+    color: var(--color-text);
+  }
+  .recipe-content li { 
+    margin-bottom: 0.85rem; 
+  }
+  .recipe-content li::marker { 
+    color: var(--color-primary); 
+    font-weight: bold;
+  }
+  .recipe-content p { 
+    line-height: 1.8; 
+    font-size: 1rem; 
+    margin-bottom: 1rem; 
+  }
+  .recipe-content strong { 
+    color: var(--color-text);
+  }
+  .sidebar { 
+    padding-top: 1rem; 
+  }
+  .affiliate-box { 
+    background: var(--color-white); 
+    border: 1px solid var(--color-border); 
+    border-radius: 12px; 
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03); 
+    margin-bottom: 1.5rem; 
+  }
+  .affiliate-box h3 { 
+    font-size: 1.2rem; 
+    font-weight: 700; 
+    color: var(--color-text);
+    margin-top: 0; 
+    margin-bottom: 1rem; 
+    border-bottom: 1px solid var(--color-border); 
+    padding-bottom: 0.5rem; 
+  }
+  .affiliate-box a { 
+    display: block; 
+    background-color: var(--color-primary);
+    color: var(--color-white); 
+    font-weight: 600; 
+    text-align: center; 
+    padding: 0.85rem; 
+    border-radius: 8px; 
+    margin-bottom: 0.75rem; 
+    transition: background-color 0.2s;
+  }
+  .affiliate-box a:last-of-type {
+    margin-bottom: 0;
+  }
+  .affiliate-box a:hover { 
+    background-color: var(--color-primary-dark); 
+    text-decoration: none; 
+  }
+  .card-category { 
+    font-size: 0.8rem; 
+    font-weight: 700; 
+    text-transform: uppercase;
+    color: var(--color-primary); 
+    display: inline-block; 
+    margin-bottom: 0.5rem; 
+  }
+  .card-category:hover { 
+    text-decoration: none; 
+    color: var(--color-primary-dark);
+  }
 </style>
 
 <BaseLayout seo={seoProps}>
@@ -226,7 +288,6 @@ try {
       </div>
     </header>
 
-    {/* --- 3. HADAPU IMAGE PATH EKA MEHETATH DANNA --- */}
     <img
       src={mainImageUrl}
       alt={recipe.data.title}
@@ -234,31 +295,37 @@ try {
     />
 
     <div class="recipe-content-wrapper">
-      {recipe.data.youtubeId && (
-        <div class="video-container">
-          <iframe
-            src={`https://www.youtube.com/embed/${recipe.data.youtubeId}`}
-            title="YouTube video player"
-            frameborder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowfullscreen>
-          </iframe>
-        </div>
-      )}
 
       <div class="recipe-content">
-        {/* Render the markdown content, patch image URLs for inline images */}
         <Content components={mdxComponents} />
       </div>
 
       <aside class="sidebar">
-        {recipe.data.affiliateLinks && recipe.data.affiliateLinks.length > 0 && (
+        {recipe.data.recommendedTools && recipe.data.recommendedTools.length > 0 && (
           <div class="affiliate-box">
             <h3>Recommended Tools</h3>
-            {recipe.data.affiliateLinks.map(link => <a href={link.url} target="_blank" rel="noopener sponsored">{link.label}</a>)}
+            {recipe.data.recommendedTools.map(link => (
+              <a href={link.url} target="_blank" rel="noopener sponsored">
+                {link.label}
+              </a>
+            ))}
+          </div>
+        )}
+        
+        {recipe.data.specialtyIngredients && recipe.data.specialtyIngredients.length > 0 && (
+          <div class="affiliate-box">
+            <h3>Specialty Ingredients</h3>
+            {recipe.data.specialtyIngredients.map(link => (
+              <a href={link.url} target="_blank" rel="noopener sponsored">
+                {link.label}
+              </a>
+            ))}
           </div>
         )}
       </aside>
+
     </div>
   </article>
+
+  <script type="application/ld+json" set:html={JSON.stringify(recipeSchema)} />
 </BaseLayout>

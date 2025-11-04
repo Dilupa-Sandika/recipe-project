@@ -37,7 +37,7 @@
           "type": "string",
           "pattern": "^(.\\/)?[a-zA-Z0-9-_\\/]+\\.(jpg|jpeg|png|webp)$",
           "errorMessage": {
-            "pattern": "Image path must be valid and in /images/ directory"
+            "pattern": "Image path must be valid (e.g., ./image.jpg)"
           }
         },
         "category": {
@@ -74,7 +74,10 @@
           "type": "boolean",
           "default": false
         },
-        "affiliateLinks": {
+        "youtubeId": {
+          "type": "string"
+        },
+        "recommendedTools": {
           "type": "array",
           "items": {
             "type": "object",
@@ -94,8 +97,11 @@
             "additionalProperties": false
           }
         },
-        "youtubeId": {
-          "type": "string"
+        "specialtyIngredients": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/recipes/properties/recommendedTools/items"
+          }
         },
         "$schema": {
           "type": "string"
