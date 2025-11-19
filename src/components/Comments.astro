@@ -22,7 +22,25 @@ const { title, url, id } = Astro.props;
   
 </div>
 
-<script is:inline defer src="https://cusdis.com/js/cusdis.es.js"></script>
+<script src="https://cusdis.com/js/cusdis.es.js"></script>
+
+<script is:inline>
+  window.addEventListener('message', function (e) {
+    if (e.origin === 'https://cusdis.com') {
+      try {
+        const data = JSON.parse(e.data);
+        if (data.height) {
+          const iframe = document.querySelector('#cusdis_thread iframe');
+          if (iframe) {
+            iframe.style.height = data.height + 'px';
+          }
+        }
+      } catch (err) {
+        // Ignore non-JSON messages
+      }
+    }
+  });
+</script>
 
 <style>
   .comments-container {
@@ -35,5 +53,14 @@ const { title, url, id } = Astro.props;
     font-weight: 700;
     margin-bottom: 1.5rem;
     color: var(--color-text-darker);
+  }
+  
+  /* Force the Cusdis iframe to look correct */
+  :global(#cusdis_thread iframe) {
+    width: 100% !important;
+    border: none !important;
+    display: block !important;
+    /* Start with a reasonable height to prevent jumpiness */
+    min-height: 400px; 
   }
 </style>
