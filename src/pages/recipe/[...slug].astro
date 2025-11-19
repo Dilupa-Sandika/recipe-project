@@ -4,6 +4,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getCollection, type CollectionEntry } from 'astro:content';
 import sanitizeHtml from 'sanitize-html';
 import SocialShare from '../../components/SocialShare.astro'; // <--- IMPORT ADDED
+import Comments from '../../components/Comments.astro';       // <--- IMPORT ADDED
 
 // --- 1. IMAGE PATH HELPER FUNCTION ---
 function getPublicImageUrl(recipe: CollectionEntry<'recipes'>, imagePath: string) {
@@ -300,6 +301,12 @@ try {
         <Content components={mdxComponents} />
         
         <SocialShare title={recipe.data.title} description={recipe.data.description} />
+        
+        <Comments 
+          title={recipe.data.title} 
+          url={Astro.url.href} 
+          id={`recipe-${recipe.slug}`} 
+        />
       </div>
 
       <aside class="sidebar">
