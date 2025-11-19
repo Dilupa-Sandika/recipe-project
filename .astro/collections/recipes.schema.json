@@ -37,7 +37,7 @@
           "type": "string",
           "pattern": "^(.\\/)?[a-zA-Z0-9-_\\/]+\\.(jpg|jpeg|png|webp)$",
           "errorMessage": {
-            "pattern": "Image path must be valid (e.g., ./image.jpg)"
+            "pattern": "Image path must be valid and in /images/ directory"
           }
         },
         "category": {
@@ -53,17 +53,11 @@
         },
         "prepTime": {
           "type": "string",
-          "pattern": "^(\\d+)\\s*(min|hour|hrs?|minutes?)$",
-          "errorMessage": {
-            "pattern": "Prep time must be in format: '30 min' or '2 hours'"
-          }
+          "pattern": "^(\\d+)\\s*(min|hour|hrs?|minutes?)$"
         },
         "cookTime": {
           "type": "string",
-          "pattern": "^(\\d+)\\s*(min|hour|hrs?|minutes?)$",
-          "errorMessage": {
-            "pattern": "Cook time must be in format: '30 min' or '2 hours'"
-          }
+          "pattern": "^(\\d+)\\s*(min|hour|hrs?|minutes?)$"
         },
         "servings": {
           "type": "number",
@@ -100,7 +94,21 @@
         "specialtyIngredients": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/recipes/properties/recommendedTools/items"
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string"
+              },
+              "url": {
+                "type": "string",
+                "format": "uri"
+              }
+            },
+            "required": [
+              "label",
+              "url"
+            ],
+            "additionalProperties": false
           }
         },
         "$schema": {

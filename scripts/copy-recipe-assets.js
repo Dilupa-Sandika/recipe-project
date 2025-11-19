@@ -1,25 +1,43 @@
-#!/usr/bin/env node
+// scripts/copy-recipe-assets.js
 import { promises as fs } from 'fs';
 import path from 'path';
 
-const srcRoot = path.resolve('src', 'content', 'recipes');
-const destRoot = path.resolve('public', 'content', 'recipes');
+// We now handle multiple content sources
+const contentSources = [
+  {
+    src: path.resolve('src', 'content', 'recipes'),
+    dest: path.resolve('public', 'content', 'recipes')
+  },
+  {
+    src: path.resolve('src', 'content', 'blog'),
+    dest: path.resolve('public', 'content', 'blog')
+  }
+];
+
 const imageExts = new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif', '.svg', '.avif']);
 
 async function ensureDir(dir) {
   try {
     await fs.mkdir(dir, { recursive: true });
   } catch (err) {
-    // ignore
+    // ignore if already exists
   }
 }
 
-async function walkAndCopy(dir) {
-  const entries = await fs.readdir(dir, { withFileTypes: true });
+async function walkAndCopy(dir, srcRoot, destRoot) {
+  let entries;
+  try {
+    entries = await fs.readdir(dir, { withFileTypes: true });
+  } catch (err) {
+    if (err.code === 'ENOENT') return; // Source dir doesn't exist, skip
+    throw err;
+  }
+
   for (const entry of entries) {
     const fullPath = path.join(dir, entry.name);
+    
     if (entry.isDirectory()) {
-      await walkAndCopy(fullPath);
+      await walkAndCopy(fullPath, srcRoot, destRoot);
       continue;
     }
 
@@ -28,6 +46,7 @@ async function walkAndCopy(dir) {
 
     const relPath = path.relative(srcRoot, fullPath);
     const destPath = path.join(destRoot, relPath);
+    
     await ensureDir(path.dirname(destPath));
     await fs.copyFile(fullPath, destPath);
     console.log(`Copied: ${relPath}`);
@@ -36,16 +55,14 @@ async function walkAndCopy(dir) {
 
 async function run() {
   try {
-    await ensureDir(destRoot);
-    const stat = await fs.stat(srcRoot).catch(() => null);
-    if (!stat || !stat.isDirectory()) {
-      console.warn(`Source recipes directory not found: ${srcRoot}`);
-      process.exit(0);
+    for (const source of contentSources) {
+      console.log(`Syncing ${source.src} -> ${source.dest}...`);
+      await ensureDir(source.dest);
+      await walkAndCopy(source.src, source.src, source.dest);
     }
-    await walkAndCopy(srcRoot);
-    console.log('Recipe assets copy complete.');
+    console.log('Asset copy complete.');
   } catch (err) {
-    console.error('Error copying recipe assets:', err);
+    console.error('Error copying assets:', err);
     process.exit(1);
   }
 }

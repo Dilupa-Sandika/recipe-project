@@ -1,0 +1,86 @@
+---
+// src/pages/blog/index.astro
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+// Get all blog posts and sort by date
+const allPosts = await getCollection('blog');
+allPosts.sort((a, b) => b.data.publishDate.valueOf() - a.data.publishDate.valueOf());
+
+// --- HELPER: Generate correct public path for blog images ---
+function getBlogImage(post) {
+  const imagePath = post.data.image;
+  if (!imagePath) return '';
+
+  // If it's already an absolute path (e.g., /images/logo.png), return it
+  if (imagePath.startsWith('/')) return imagePath;
+
+  // If it's relative (./image.jpg), construct the path based on the folder name
+  if (imagePath.startsWith('./')) {
+    // Extract the folder name from the slug (e.g. "kitchen-tips-1/post-name" -> "kitchen-tips-1")
+    // If the slug doesn't have a folder (root level), use the slug itself
+    const folderName = post.slug.includes('/') ? post.slug.split('/')[0] : post.slug;
+    
+    // Return the path where copy-recipe-assets.js put the file
+    return `/content/blog/${folderName}/${imagePath.slice(2)}`;
+  }
+  
+  return imagePath;
+}
+
+const seoProps = {
+  title: 'Blog | Vegas Recipes',
+  description: 'Cooking tips, kitchen hacks, and food stories from Vegas Recipes.'
+};
+---
+
+<style>
+  .blog-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+  }
+  .blog-card {
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: transform 0.2s;
+  }
+  .blog-card:hover { transform: translateY(-5px); }
+  .blog-card img { width: 100%; height: 200px; object-fit: cover; }
+  .card-content { padding: 1.5rem; }
+  .card-title { font-size: 1.25rem; margin-bottom: 0.5rem; color: var(--color-text-darker); }
+  .card-title a { text-decoration: none; color: inherit; }
+  .card-title a:hover { color: var(--color-primary); }
+  .card-date { font-size: 0.85rem; color: var(--color-text-light); margin-bottom: 1rem; display: block; }
+  .card-desc { font-size: 0.95rem; color: var(--color-text); line-height: 1.5; }
+  .read-more { display: inline-block; margin-top: 1rem; font-weight: 600; }
+</style>
+
+<BaseLayout seo={seoProps}>
+  <h1 class="text-center">Kitchen Blog</h1>
+  <p class="text-center" style="max-width: 600px; margin: 0 auto; color: var(--color-text-light);">
+    Discover useful tips, tricks, and stories to help you become a better cook.
+  </p>
+
+  <div class="blog-grid">
+    {allPosts.map(post => (
+      <article class="blog-card">
+        <a href={`/blog/${post.slug}`}>
+          {/* UPDATED: Use the helper function here */}
+          <img src={getBlogImage(post)} alt={post.data.title} />
+        </a>
+        <div class="card-content">
+          <h2 class="card-title">
+            <a href={`/blog/${post.slug}`}>{post.data.title}</a>
+          </h2>
+          <span class="card-date">{post.data.publishDate.toLocaleDateString()}</span>
+          <p class="card-desc">{post.data.description}</p>
+          <a href={`/blog/${post.slug}`} class="read-more">Read Article &rarr;</a>
+        </div>
+      </article>
+    ))}
+  </div>
+</BaseLayout>

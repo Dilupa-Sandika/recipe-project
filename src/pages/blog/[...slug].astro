@@ -1,0 +1,175 @@
+---
+// src/pages/blog/[...slug].astro
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SocialShare from '../../components/SocialShare.astro'; 
+import Comments from '../../components/Comments.astro'; // <--- Imported Comments
+import { getCollection, type CollectionEntry } from 'astro:content';
+
+// --- IMAGE HELPER FOR BLOG ---
+function getPublicImageUrl(entry: CollectionEntry<'blog'>, imagePath: string) {
+  if (!imagePath) return '';
+  
+  const folderName = (() => {
+    const fp = entry.filePath || '';
+    if (fp && fp.split) {
+      const parts = fp.split(/[/\\\\]+/);
+      const idx = parts.findIndex(p => p === 'blog');
+      if (idx >= 0 && parts.length > idx + 1) return parts[idx + 1];
+    }
+    return (entry.slug && entry.slug.split) ? entry.slug.split('/')[0] : entry.slug;
+  })();
+
+  if (imagePath.startsWith('./')) {
+    return `/content/blog/${folderName}/${imagePath.slice(2)}`;
+  }
+  if (imagePath.startsWith('/images/')) {
+    const base = imagePath.split('/').pop();
+    return `/content/blog/${folderName}/${base}`;
+  }
+  return imagePath;
+}
+
+// Generate Static Paths for Blog
+export async function getStaticPaths() {
+  const allPosts = await getCollection('blog');
+  return allPosts.map(post => ({
+    params: { slug: post.slug },
+    props: { post },
+  }));
+}
+
+interface Props {
+  post: CollectionEntry<'blog'>;
+}
+
+const { post } = Astro.props;
+const { Content } = await post.render();
+
+// SEO Props
+const seoProps = {
+  title: post.data.title,
+  description: post.data.description,
+  image: post.data.image
+};
+
+const mainImageUrl = getPublicImageUrl(post, post.data.image);
+---
+
+<style>
+  .recipe-header { 
+    text-align: center;
+    border-bottom: 1px solid var(--color-border); 
+    padding-bottom: 2rem; 
+  }
+  .recipe-title { 
+    font-size: 2.8rem; 
+    font-weight: 900; 
+    color: var(--color-text);
+    margin-bottom: 1rem; 
+    line-height: 1.3; 
+  }
+  .recipe-meta { 
+    display: flex; 
+    justify-content: center; 
+    gap: 1.5rem; 
+    color: var(--color-text-light);
+    font-weight: 600;
+  }
+  .recipe-image { 
+    margin-top: 2rem; 
+    width: 100%; 
+    max-height: 500px; 
+    object-fit: cover; 
+    border-radius: 12px;
+  }
+  .recipe-content-wrapper { 
+    display: grid; 
+    grid-template-columns: 1fr; 
+    gap: 2rem; 
+    margin-top: 2rem;
+  }
+  @media (min-width: 768px) { 
+    .recipe-content-wrapper { 
+      grid-template-columns: 3fr 1fr; 
+    } 
+  }
+  .recipe-content { 
+    background: var(--color-white); 
+    border: 1px solid var(--color-border); 
+    border-radius: 12px;
+    padding: 2rem;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+  }
+  /* Styles for markdown content inside the blog */
+  .recipe-content :global(h2) { 
+    font-size: 1.8rem; 
+    font-weight: 700; 
+    color: var(--color-primary); 
+    margin-top: 2rem; 
+    margin-bottom: 1rem;
+    border-bottom: 2px solid var(--color-border);
+    padding-bottom: 0.5rem; 
+  }
+  .recipe-content :global(ul), .recipe-content :global(ol) { 
+    padding-left: 1.5rem;
+    line-height: 1.8; 
+    color: var(--color-text);
+  }
+  .recipe-content :global(li) { 
+    margin-bottom: 0.85rem;
+  }
+  .recipe-content :global(li::marker) { 
+    color: var(--color-primary); 
+    font-weight: bold;
+  }
+  .recipe-content :global(p) { 
+    line-height: 1.8; 
+    font-size: 1rem; 
+    margin-bottom: 1rem;
+  }
+  .sidebar { 
+    padding-top: 1rem; 
+  }
+</style>
+
+<BaseLayout seo={seoProps}>
+  <article>
+    
+    <header class="recipe-header">
+      <h1 class="recipe-title">{post.data.title}</h1>
+      
+      <div class="recipe-meta">
+        <span><strong>Published:</strong> {post.data.publishDate.toLocaleDateString()}</span>
+        <span><strong>Author:</strong> {post.data.author}</span>
+      </div>
+    </header>
+
+    <img
+      src={mainImageUrl}
+      alt={post.data.title}
+      class="recipe-image" 
+    />
+
+    <div class="recipe-content-wrapper">
+
+      <div class="recipe-content">
+        <Content />
+        
+        <SocialShare title={post.data.title} description={post.data.description} />
+        
+        <Comments 
+          title={post.data.title} 
+          url={Astro.url.href} 
+          id={`blog-${post.slug}`} 
+        />
+
+      </div>
+
+      <aside class="sidebar">
+         </aside>
+
+    </div>
+
+  </article>
+</BaseLayout>
